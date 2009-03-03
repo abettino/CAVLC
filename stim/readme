@@ -7,6 +7,13 @@ order to figure out how it works and have not removed them. Example, decode 1 se
 
 ./ffmpeg -t 1 -i Video.mp4 -vcodec rawvideo output.avi > log
 
+The first word in the bistream is the bit offset that the stream starts at. The test bench
+will parse this data and apply the data shifted appropriately to the dut. After the first
+word will be the raw bitstream data, 16 bits per line.
+
+The levels file contains the output levels as a signed integer seperate by a space. The test
+bench will parse this file and compare the output of the dut to these values.
+
 Here are the files generate thus far:
 
 bistream0.dat : bistream file extracted from ffmpeg.  
