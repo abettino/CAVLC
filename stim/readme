@@ -1,0 +1,17 @@
+
+
+This stim directory constains the stimulus files for the design. Also included
+is the modified ffmpeg program to create this stimulus. Download the ffmpeg source. Replace the h264.c with this one and compile it. Simply do a normal
+decode and bitsream.dat and levels.dat will be created in the current directory. It is probably best to redirect the output since I littered it with printfs in 
+order to figure out how it works and have not removed them. Example, decode 1 second of Video.mp4
+
+./ffmpeg -t 1 -i Video.mp4 -vcodec rawvideo output.avi > log
+
+Here are the files generate thus far:
+
+bistream0.dat : bistream file extracted from ffmpeg.  
+                The source video was from 
+                http://www.elecard.com/download/clips.php 
+                it is the BMP2 video at 320x240. 
+levels0.dat   : level data extracted from this video during the decode process.
+                This contains 1000 level entries.
