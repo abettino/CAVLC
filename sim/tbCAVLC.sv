@@ -1,4 +1,5 @@
 `include "tbConfig.vh"
+`include "BitStreamGenerator.sv"
 
 interface CAVLCIntfc(input bit Clk);
 logic        nReset;
@@ -36,9 +37,31 @@ CAVLC uCAVLC (
               .BlockDone    (CAVLCIntfc.BlockDone)         // Current 4x4 block complere.
               );
 
+// launch the test
+basic_test test(CAVLCIntfc);
 
-initial begin
-  #1000 $stop;
-end
 
 endmodule
+
+program basic_test(CAVLCIntfc CAVLCIntfc);
+
+BitStreamGenerator b1;
+
+
+initial begin
+  b1 = new(CAVLCIntfc);
+  b1.Init();
+  b1.OutOfReset();
+  b1.LoadBitstream("../stim/bistream0.dat");
+  b1.DisplayStream(10);
+  b1.LoadLevels("../stim/levels0.dat");
+  b1.DisplayLevels(10);
+  
+  $stop;
+  
+end
+
+
+
+endprogram
+
