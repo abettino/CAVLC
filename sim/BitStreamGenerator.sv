@@ -20,15 +20,35 @@ int          StreamOffset;
   endfunction
 
 virtual task Init();
-  CAVLCIntfc.nReset = 1'b0;
-  CAVLCIntfc.BitstreamData = 16'b0;
+  CAVLCIntfc.nReset <= '0;
+  CAVLCIntfc.Bitstream <= '0;
+  CAVLCIntfc.Enable <= '0;
   
 endtask
 
 virtual task OutOfReset();
   repeat (100) @(CAVLCIntfc.cb);
   CAVLCIntfc.nReset <=  1'b1;
+  repeat (10) @(CAVLCIntfc.cb);
+  CAVLCIntfc.Enable <=  1'b1;
   repeat (1) @(CAVLCIntfc.cb);
+endtask
+
+virtual task Run();
+int count;
+  
+  count = 0;
+  
+  fork
+    while (1) begin
+      @(CAVLCIntfc.cb);
+      if (CAVLCIntfc.RdReq) begin
+        CAVLCIntfc.Bitstream <= BitStreamMem[count];
+        count++;
+      end
+      
+    end
+  join_none
 endtask
 
 virtual function LoadBitstream(input string filename);

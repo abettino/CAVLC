@@ -47,7 +47,8 @@ int main () {
   
   j=0;
 
-  printf("module ROM (input [15:0] Address, output reg [4:0] TotalCoeff, output reg [1:0] TrailingOnes);\n");
+  printf("module ROM (input [15:0] Address, output reg [4:0] TotalCoeff, output reg [1:0] TrailingOnes, output reg [4:0] NumShift);\n");
+  printf("always @* begin\n");
   printf("case (Address)\n");
   while (!feof(file)) {
     if (fscanf(file,"%s",bitstring)>0) {
@@ -61,6 +62,7 @@ int main () {
 	  printf(": begin\n");
 	  printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);
 	  printf("  TrailingOnes = 2'd%d;\n",t1_array[j]);
+	  printf("  NumShift = 5'd%d;\n",length);
 	  printf("end\n");
 	}
       }
@@ -70,6 +72,7 @@ int main () {
 	printf(": begin\n");
 	printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);
 	printf("  TrailingOnes = 2'd%d;\n",t1_array[j]);
+	printf("  NumShift = 5'd%d;\n",length);
 	printf("end\n");
       }
 
@@ -78,9 +81,10 @@ int main () {
     }
   }
 
-  printf("default : begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\nend\n");
+  printf("default : begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\n  NumShift=5'd0;\n\nend\n");
 
-  printf("endcase\nendmodule\n");
+
+  printf("endcase\nend\nendmodule\n");
   return 0;
 }
 	  

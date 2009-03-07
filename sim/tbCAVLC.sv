@@ -3,15 +3,18 @@
 
 interface CAVLCIntfc(input bit Clk);
 logic        nReset;
-logic [15:0] BitstreamData;                 
+logic [15:0] Bitstream;
 logic        RdReq;             
 logic [12:0] LevelOut;          
 logic        WrReq;             
 logic        BlockDone;         
+logic        Enable;
 
 clocking cb @(posedge Clk);
 input        LevelOut,RdReq,WrReq,BlockDone;
-output       nReset,BitstreamData;
+output       nReset,Bitstream, Enable;
+  
+  
 endclocking : cb
 
 endinterface
@@ -30,7 +33,8 @@ CAVLCIntfc CAVLCIntfc(Clk);
 CAVLC uCAVLC (
               .Clk          (Clk),                         // Clock.
               .nReset       (CAVLCIntfc.nReset),           // Async reset.
-              .BitstreamData(CAVLCIntfc.BitstreamData),     // Input bitstream data.
+              .Enable       (CAVLCIntfc.Enable),           // enable signal.
+              .Bitstream    (CAVLCIntfc.Bitstream),     // Input bitstream data.
               .RdReq        (CAVLCIntfc.RdReq),            // Read from the bistream source.
               .LevelOut     (CAVLCIntfc.LevelOut),         // Decoded level output.
               .WrReq        (CAVLCIntfc.WrReq),            // Write to level buffer/fifo.
@@ -56,8 +60,11 @@ initial begin
   b1.DisplayStream(10);
   b1.LoadLevels("../stim/levels0.dat");
   b1.DisplayLevels(10);
+  b1.Run();
   
-  $stop;
+  
+
+  #1000 $stop;
   
 end
 
