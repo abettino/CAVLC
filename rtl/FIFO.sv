@@ -15,7 +15,8 @@ module FIFO (
 
 // Registers for read/write counters.
 logic             [2:0] WriteCnt;
-logic             [2:0] ReadCnt;
+logic [2:0]             ReadCnt,ReadCntComb;
+
 
 // Number of Words in the FIFO
 logic             [2:0] NumWords;
@@ -26,11 +27,13 @@ logic                  DecNumWords;
 
 logic [15:0]           DataOutInt;
 
+
 assign DataOut = (Overflow | Underflow) ? 16'h0000 : DataOutInt;
 
 
+
 // FIFO Memories
-FIFOMemory uFIFOMemoryLeft (
+FIFOMemory uFIFOMemory (
   .Clk                (Clk),
   .nReset             (nReset),
   .AddrWrite          (WriteCnt),
@@ -79,6 +82,7 @@ always @(posedge Clk or negedge nReset)
   end
 
 // ReadCounter. Count 0-7.
+assign ReadCntComb = ReadCnt + 3'b1;
 always @(posedge Clk or negedge nReset)
   begin : ReadCounter
     if (!nReset) begin
@@ -86,7 +90,8 @@ always @(posedge Clk or negedge nReset)
     end 
     else begin
       if (ReadFIFO & !Empty) begin
-        ReadCnt <= ReadCnt + 3'b1;
+//        ReadCnt <= ReadCnt + 3'b1;
+        ReadCnt <= ReadCntComb;
       end
     end
   end
@@ -94,20 +99,14 @@ always @(posedge Clk or negedge nReset)
 assign IncNumWords = DataReady & ~&NumWords;
 assign DecNumWords = ReadFIFO & |NumWords;
 
-always @(posedge Clk or negedge nReset)
+always_ff @(posedge Clk or negedge nReset)
   begin : WordCounter
-    if (!nReset) begin
+    if (!nReset) begin 
       NumWords <= 3'b000;
-    end 
+    end
     else begin
-      if (DecNumWords) begin
-        NumWords <= NumWords - 1'b1;
-      end 
-      else begin
-        if (IncNumWords) begin
-          NumWords <= NumWords + 1'b1;
-        end
-      end
+      if (DecNumWords & !IncNumWords)      NumWords <= NumWords - 3'b1;
+      else if (IncNumWords & !DecNumWords) NumWords <= NumWords + 3'b1;
     end 
   end 
 

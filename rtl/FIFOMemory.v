@@ -61,7 +61,6 @@ always @(posedge Clk or negedge nReset)
           Memory[5] <= 16'h0000;
           Memory[6] <= 16'h0000;
           Memory[7] <= 16'h0000;
-          DataOut <= 16'h0000;
         end 
         else begin
           if (WE) begin
