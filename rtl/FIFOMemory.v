@@ -80,18 +80,16 @@ always @(posedge Clk or negedge nReset)
   end
 
 always @* begin
-  if (OE) begin
-    case (AddrRead)
-      3'b000 : DataOut = Memory[0];        
-      3'b001 : DataOut = Memory[1];
-      3'b010 : DataOut = Memory[2];
-      3'b011 : DataOut = Memory[3];
-      3'b100 : DataOut = Memory[4];        
-      3'b101 : DataOut = Memory[5];
-      3'b110 : DataOut = Memory[6];
-      3'b111 : DataOut = Memory[7];
-    endcase 
-  end
+  case (AddrRead)
+    3'b000 : DataOut = Memory[0];        
+    3'b001 : DataOut = Memory[1];
+    3'b010 : DataOut = Memory[2];
+    3'b011 : DataOut = Memory[3];
+    3'b100 : DataOut = Memory[4];        
+    3'b101 : DataOut = Memory[5];
+    3'b110 : DataOut = Memory[6];
+    3'b111 : DataOut = Memory[7];
+  endcase 
 end
 
 ////////////////////////////////////////////////////////////////////////////////

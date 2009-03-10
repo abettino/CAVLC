@@ -68,9 +68,9 @@ FIFO uFIFO(
   .DataOut   (DataOutFIFO),
   .Full      (),
   .AlmostFull(AlmostFull),
-  .Empty     (Empty),
-  .Overflow  (Overflow),
-  .Underflow (Underflow)
+  .Empty     (),
+  .Overflow  (),
+  .Underflow ()
 );
 ////////////////////////////////////////////////////////////////////////////////
 // Bit pointing control/Data shifting
@@ -87,15 +87,13 @@ always_ff @(posedge Clk or negedge nReset)
   end
   else begin
     // Bit pointer register.
-    if (ShiftEn) begin 
-      if (BitPtrOverRun) BitPtr <= (BitPtr+NumShift-16);
-      else               BitPtr <= BitPtrComb;
-    end
+    if      (ShiftEn & BitPtrOverRun) BitPtr <= (BitPtr+NumShift-5'd16);
+    else if (ShiftEn) BitPtr <= BitPtrComb;
     // Current Data Loading.
-    if      (BarrelShiftEnPulse) CurrentData[47:32] <= DataOutFIFO;
-    else if (BarrelShiftEnDel[0])   CurrentData[31:16] <= DataOutFIFO;
+    if      (BarrelShiftEnPulse)   CurrentData[47:32] <= DataOutFIFO;
+    else if (BarrelShiftEnDel[0])  CurrentData[31:16] <= DataOutFIFO;
     else if (BarrelShiftEnDel[1])  CurrentData[15:0]  <= DataOutFIFO;
-    else if (ShiftCond)          CurrentData        <= {CurrentData[31:0],DataOutFIFO};
+    else if (ShiftCond)            CurrentData        <= {CurrentData[31:0],DataOutFIFO};
     // output control.
     BitstreamShifted <= BitstreamShiftedInt;
   end
@@ -134,7 +132,6 @@ always_comb begin
     5'd29 : BitstreamShiftedInt = CurrentData[18:3];
     5'd30 : BitstreamShiftedInt = CurrentData[17:2];
     5'd31 : BitstreamShiftedInt = CurrentData[16:1];
-    5'd32 : BitstreamShiftedInt = CurrentData[15:0];
     default : BitstreamShiftedInt = 'x;
   endcase
 end
