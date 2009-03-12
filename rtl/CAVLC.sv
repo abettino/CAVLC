@@ -22,6 +22,10 @@ logic                             LevelDecodeEnable;
 logic [4:0]                       NumShift_LevelDecode;
 logic                             ShiftEn_LevelDecode;
 logic                             LevelDecodeDone;
+logic                             ShiftEn_ZeroDecoe;
+logic [4:0]                       NumShift_ZeroDecode;
+logic                             ZeroDecodeEnable;
+logic                             ZeroDecodeDone;
 
 
 CoeffTokenDecode uCoeffTokenDecode (
@@ -58,7 +62,11 @@ CTRLFSM uCTRLFSM (
   .ShiftEn                  (ShiftEn),
   .NumShift                 (NumShift),
   .CoeffTokenDecodeEnable   (CoeffTokenDecodeEnable),                               
-  .LevelDecodeEnable        (LevelDecodeEnable)
+  .LevelDecodeEnable        (LevelDecodeEnable),
+  .ZeroDecodeEnable         (ZeroDecodeEnable),            
+  .NumShift_ZeroDecode      (NumShift_ZeroDecode),
+  .ShiftEn_ZeroDecode       (ShiftEn_ZeroDecode),
+  .ZeroDecodeDone           (ZeroDecodeDone)
 );
 
 LevelDecode uLevelDecode (
@@ -75,6 +83,15 @@ LevelDecode uLevelDecode (
   .Done                     (LevelDecodeDone)
 );
 
-
+ZeroDecode uZeroDecode (
+  .Clk             (Clk),
+  .nReset          (nReset),
+  .Enable          (ZeroDecodeEnable),
+  .BitstreamShifted(BitstreamShifted),
+  .TotalCoeff      (TotalCoeff),
+  .NumShift        (NumShift_ZeroDecode),
+  .ShiftEn         (ShiftEn_ZeroDecode),
+  .Done            (ZeroDecodeDone)
+);
 
 endmodule

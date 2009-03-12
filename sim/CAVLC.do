@@ -1,10 +1,17 @@
 vlog -work work  ../rtl/CoeffTokenDecode.sv \
 ../rtl/CoeffTokenROM02.v \
+../rtl/CoeffTokenROM48.v \
 ../rtl/FIFOMemory.v \
 ../rtl/FIFO.sv \
 ../rtl/CTRLFSM.sv \
 ../rtl/BarrelShifter.sv \
 ../rtl/PulseGenRising.v \
+../rtl/LevelDecode.sv \
+../rtl/LevelProcessingUnit.sv \
+../rtl/OneFinder.sv \
+../rtl/ZeroDecode.sv \
+../rtl/TotalZeroTable_1.v \
+../rtl/RunBeforeTable.v \
 ../rtl/CAVLC.sv
 
 
@@ -17,6 +24,11 @@ add wave -radix 16 {tbCAVLC/uCAVLC/*}
 add wave -group {FIFO} -radix 16 {tbCAVLC/uCAVLC/uBarrelShifter/uFIFO/*}
 add wave -group {BarrelShifter} -radix 16 {tbCAVLC/uCAVLC/uBarrelShifter/*}
 add wave -group {CoeffTokenDecode} -radix 16 {tbCAVLC/uCAVLC/uCoeffTokenDecode/*}
+add wave -group {LevelDecode} -radix 16 {tbCAVLC/uCAVLC/uLevelDecode/*}
+add wave -group {LevelProcUnit} -radix 16 {tbCAVLC/uCAVLC/uLevelDecode/uLevelProcessingUnit/*}
 add wave -group {CTRL FSM} -radix 16 {tbCAVLC/uCAVLC/uCTRLFSM/*}
-
+add wave -group {Zero Decode} -radix 16 {tbCAVLC/uCAVLC/uZeroDecode/*}
+add wave -group {Run before table} -radix 16 {tbCAVLC/uCAVLC/uZeroDecode/uRunBeforeTable/*}
+add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/LevelOut}
+add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/WrReq}
 run -all

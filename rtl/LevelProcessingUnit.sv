@@ -1,6 +1,7 @@
 module LevelProcessingUnit (
                             input  logic        Clk,              // Clock.
                             input  logic        nReset,           // Async reset.                           
+                            input logic TrailingOneMode,
                             input logic LPUTrig,
                             input logic [2:0] SuffixLength,
                             input logic [13:0] CodeNum,
@@ -25,6 +26,10 @@ always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin 
     MidCalc <= '0;
     WrReq <= '0;
+  end
+  else if (TrailingOneMode) begin
+    MidCalc <= CodeNum[0] ? '1 : 'h02;
+    WrReq <= '1;
   end
   else if (LPUTrig) begin 
     MidCalc <= CodeNumInt[0] ? -CodeNumInt-1 : CodeNumInt+2;
