@@ -13,9 +13,12 @@ logic        Enable;
 clocking cb @(posedge Clk);
 input        LevelOut,RdReq,WrReq,BlockDone;
 output       nReset,Bitstream, Enable;
-  
-  
 endclocking : cb
+
+modport TB (clocking cb);
+
+modport DUT (  output        LevelOut,RdReq,WrReq,BlockDone,
+               input       nReset,Bitstream, Enable);
 
 endinterface
 
@@ -57,14 +60,14 @@ initial begin
   b1.Init();
   b1.OutOfReset();
   b1.LoadBitstream("../stim/bistream0.dat");
-  b1.DisplayStream(10);
+  b1.DisplayStream(30);
   b1.LoadLevels("../stim/levels0.dat");
   b1.DisplayLevels(10);
   b1.Run();
   
   
 
-  #1000 $stop;
+  #3000 $stop;
   
 end
 

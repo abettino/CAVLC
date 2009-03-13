@@ -24,7 +24,8 @@ logic [3:0]                     RunBefore;
 enum logic [1:0] {
                   IDLE,
                   TOTAL_ZERO,
-                  ZERO_RUN
+                  ZERO_RUN,
+                  WAIT
                   } CurrentState, NextState;
 
 
@@ -37,8 +38,10 @@ always_comb begin
     IDLE : if (Enable) NextState = TOTAL_ZERO;
     else NextState = IDLE;
     TOTAL_ZERO : NextState = ZERO_RUN;
-    ZERO_RUN : if (ZeroesLeft == 0) NextState = IDLE;
+    ZERO_RUN : if (ZeroesLeft == 0) NextState = WAIT;
     else NextState = ZERO_RUN;
+    WAIT : if (!Enable) NextState = IDLE;
+    else NextState = WAIT;
     
   endcase
 end
@@ -68,7 +71,7 @@ always_ff @(posedge Clk or negedge nReset)
   else begin
     if (CurrentState == IDLE) ZeroesLeft <= '0;
     else if (CurrentState == TOTAL_ZERO) ZeroesLeft <= TotalZeroes;
-    else if (CurrentState == ZERO_RUN) ZeroesLeft <= RunBefore==0 ? 0 : ZeroesLeft - RunBefore;
+    else if (CurrentState == ZERO_RUN) ZeroesLeft <= ZeroesLeft - RunBefore;
   end
 
 always_comb begin

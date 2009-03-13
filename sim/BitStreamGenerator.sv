@@ -35,15 +35,15 @@ virtual task OutOfReset();
 endtask
 
 virtual task Run();
-int count;
-  
+int  count;
+
   count = 0;
   
   fork
     while (1) begin
       @(CAVLCIntfc.cb);
+      CAVLCIntfc.Bitstream <= BitStreamMem[count];
       if (CAVLCIntfc.RdReq) begin
-        CAVLCIntfc.Bitstream <= BitStreamMem[count];
         count++;
       end
       
@@ -68,6 +68,13 @@ logic [16:0] Mask;
   StreamOffset = BitStreamMem[0];
   
   $display("LoadBitstream: Loading bitstream from file %s",filename);
+  
+  // display for 20 words
+
+  $display("Bit Stream Mem");
+  
+  for(i=0;i<20;i++) $display("%x ",BitStreamMem[i]);
+  $display("\n");
   
   for(i=1;i<NumWords-1;i++) begin
     Mask = '1;

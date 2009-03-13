@@ -28,6 +28,10 @@ logic [4:0]                                 NumShift48;
 
 logic [4:0]                                 nC;
 
+logic [4:0]                                 TotalCoeffPrev;
+logic [1:0]                                 CoeffCnt;
+
+
 logic [4:0]                                 TotalCoeffMem[0:COEFF_MEM_SIZE-1];
 logic [2:0]                                 CoeffMemPtr;
 logic [2:0]                                 CoeffMemCnt;
@@ -38,9 +42,9 @@ logic                                       CalcAvg;
 
 
 
-always_ff @(posedge Clk or negedge nReset)
-  if (!nReset) nC <= '0;
-  else nC <= TotalCoeffAvg;
+//always_ff @(posedge Clk or negedge nReset)
+//  if (!nReset) nC <= '0;
+//  else nC <= TotalCoeffAvg;
 
 
 always_ff @(posedge Clk or negedge nReset)
@@ -84,7 +88,25 @@ CoeffTokenROM48 uCoeffTokenROM48 (
                                   );
 
 
+always_ff @(posedge Clk or negedge nReset) begin
+  if (!nReset) begin
+    TotalCoeffPrev <= '0;
+    CoeffCnt <= '0;
+    nC <= '0;
+  end
+  else begin
+    if (Enable) begin
+      TotalCoeffPrev <= TotalCoeff;
+      CoeffCnt <= {CoeffCnt[0],1'b1};
+    end
 
+    if (CoeffCnt==0) nC <= '0;
+    else if (CoeffCnt==1) nC <= TotalCoeff;
+    else nC <= (TotalCoeff + TotalCoeffPrev) >> 1;
+  end
+end
+
+/*
 always_ff @(posedge Clk or negedge nReset) begin
   if (!nReset) begin
     for (int i=0;i<COEFF_MEM_SIZE;i++) TotalCoeffMem[i] <= '0;
@@ -121,7 +143,7 @@ always_ff @(posedge Clk or negedge nReset) begin
     end
   end
 end
-
+*/
 
 
 

@@ -188,6 +188,7 @@ end
 LevelProcessingUnit uLevelProcessingUnit (
   .Clk          (Clk), 
   .nReset       (nReset), 
+  .TrailingOnes (TrailingOnes),
   .TrailingOneMode (TrailingOneMode),
   .SuffixLength (SuffixLengthLPU),
   .LPUTrig      (LPUTrig),

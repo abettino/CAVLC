@@ -1,6 +1,7 @@
 module LevelProcessingUnit (
                             input  logic        Clk,              // Clock.
                             input  logic        nReset,           // Async reset.                           
+                            input logic [1:0] TrailingOnes,
                             input logic TrailingOneMode,
                             input logic LPUTrig,
                             input logic [2:0] SuffixLength,
@@ -18,7 +19,7 @@ assign LevelOut = MidCalc[13:1];
 
 
 always_comb begin
-  if (SuffixLength == 0) CodeNumInt = CodeNum + 2;
+  if (SuffixLength == 0 && TrailingOnes<3) CodeNumInt = CodeNum + 2;
   else CodeNumInt = CodeNum;
 end
 
