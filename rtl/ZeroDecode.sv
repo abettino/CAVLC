@@ -18,6 +18,7 @@ logic [3:0]                     ZeroesLeft;
 
 logic [3:0]                     RunBefore;
 
+logic [4:0]                     CoeffCnt;
 
 
 
@@ -67,11 +68,21 @@ RunBeforeTable uRunBeforeTable (
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin
     ZeroesLeft <= '0;
+    CoeffCnt <= '0;              
   end
   else begin
-    if (CurrentState == IDLE) ZeroesLeft <= '0;
-    else if (CurrentState == TOTAL_ZERO) ZeroesLeft <= TotalZeroes;
-    else if (CurrentState == ZERO_RUN) ZeroesLeft <= ZeroesLeft - RunBefore;
+    if (CurrentState == IDLE) begin 
+      ZeroesLeft <= '0;
+      CoeffCnt <= '0;
+    end
+    else if (CurrentState == TOTAL_ZERO) begin 
+      ZeroesLeft <= TotalZeroes;
+      CoeffCnt <= CoeffCnt + 1;
+    end
+    else if (CurrentState == ZERO_RUN) begin 
+      ZeroesLeft <= ZeroesLeft - RunBefore;
+      if (CoeffCnt < TotalCoeff) CoeffCnt <= CoeffCnt + 1;
+    end
   end
 
 always_comb begin
@@ -86,7 +97,8 @@ always_comb begin
     end
     ZERO_RUN : begin
       NumShift = {1'b0,NumShiftRunBefore};
-      ShiftEn = '1;
+      if (CoeffCnt < TotalCoeff) ShiftEn = '1;
+      else ShiftEn = '0;
     end
     default : begin
       NumShift = '0;

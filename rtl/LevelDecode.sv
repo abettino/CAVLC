@@ -47,7 +47,7 @@ always_ff @(posedge Clk or negedge nReset)
     if (Enable & TrailingOnesLeft==0) begin
       case (SuffixLength)
         0 : SuffixLength <= 3'd1;
-        1 : if (OnePos >= 2) SuffixLength <= 3'd2;
+        1 : if (OnePos > 2) SuffixLength <= 3'd2;
         2 :  SuffixLength <= 3'd2;
 //        3 : if () SuffixLength <= 3'd4;
 //        4 : if (CodeNum >= 24) SuffixLength <= 3'd5;
@@ -94,6 +94,8 @@ always_ff @(posedge Clk or negedge nReset)
     Stalled <= '0;
     PrevOnePos <= '0;
     TrailingOnesLeft <= '0;
+    TrailingOneMode <= '0;
+    
   end
   else begin
     if (Enable & !DoneInt) begin

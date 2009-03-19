@@ -5,7 +5,118 @@
 
 `define BIT_STREAM_MEM_SIZE 10000
 
+class nCGenerator;
+virtual CAVLCIntfc CAVLCIntfc;
+logic [3:0] CurrentCoeffBlock [0:3];
+logic [3:0] PrevCoeffBlock [0:3];
+int         HCount;
+int         VCount;
+int         SmallBlockCnt;
+int         nA, nAAvail;
+int         nB, nBAvail;
+  
 
+  function new(virtual CAVLCIntfc a);
+    CAVLCIntfc = a;
+  endfunction
+
+virtual     task Init();
+  $display("Init Coeff blocks");
+  CAVLCIntfc.nC = 0;
+  for (int i=0;i<4;i++) begin
+    CurrentCoeffBlock[i] = 4'bx;
+    PrevCoeffBlock[i] = 4'bx;
+  end
+
+
+endtask
+
+virtual task Run();
+  fork
+    VCount=0;
+    HCount=0;
+    CAVLCIntfc.nC = 0;
+    SmallBlockCnt = 0;
+    while (1) begin
+      @(CAVLCIntfc.cb);
+
+      case (SmallBlockCnt)
+        0 : begin
+          nB = 0;
+          nBAvail = 0;
+          if (PrevCoeffBlock[1] !== 'x) begin
+            nA = PrevCoeffBlock[1];
+            nAAvail =1;
+          end
+          else begin
+            nA = 0;
+            nAAvail =0;
+          end
+        end
+        1 : begin
+          nB = 0;
+          nBAvail = 0;
+          nA = CurrentCoeffBlock[0];
+          nAAvail = 1;
+        end
+        2 : begin
+          nB = CurrentCoeffBlock[0];
+          nBAvail = 1;
+          if (PrevCoeffBlock[3] !== 'x) begin
+            nA = PrevCoeffBlock[3];
+            nAAvail = 1;
+          end
+          else begin
+            nA = 0;           // 
+            nAAvail = 0;      // 
+          end
+        end
+        3  : begin
+          nA = CurrentCoeffBlock[2];
+          nB = CurrentCoeffBlock[1];
+          nAAvail = 1;
+          nBAvail = 1;
+        end
+      endcase
+
+      if (nBAvail && nAAvail) begin 
+        if ((nA + nB) & 'h1)    CAVLCIntfc.nC = (nA+nB)/2 + 1; // odd number
+        else    CAVLCIntfc.nC = (nA+nB)/2;
+      end
+      else CAVLCIntfc.nC = nA+nB;
+
+      if (CAVLCIntfc.BlockDone) begin
+        $display("nA: %d nB: %d SmallBlockCnt: %d",nA,nB,SmallBlockCnt); // 
+        CurrentCoeffBlock[SmallBlockCnt] = CAVLCIntfc.TotalCoeffOut;
+        if (SmallBlockCnt==3) begin
+          if (HCount == `HBLOCKS-1  && VCount==`VBLOCKS-1) begin
+            VCount=0;
+            HCount=0;
+            Init();
+          end
+          else if (HCount == `HBLOCKS-1) begin
+            HCount = 0;
+            VCount++;
+            Init();
+          end
+          else begin
+            HCount++;
+          end
+          SmallBlockCnt=0;
+          for (int i=0;i<4;i++) begin
+            PrevCoeffBlock[i] = CurrentCoeffBlock[i];
+            $display("load block: %d",PrevCoeffBlock[i]);
+          end
+        end else begin
+          SmallBlockCnt++;
+        end
+      end
+    end
+  join_none
+
+endtask
+
+endclass
 
 class BitStreamGenerator;
 virtual CAVLCIntfc CAVLCIntfc;
@@ -53,10 +164,11 @@ endtask
 
 virtual function LoadBitstream(input string filename);
 int     i;
-logic [16:0] CurrentWord;
-logic [16:0] NextWord;
+logic [16*30-1:0] LongStream;
+logic [15:0] CurrentWord;
+logic [15:0] NextWord;
 
-logic [16:0] Mask;
+logic [15:0] Mask;
   
   $readmemh(filename,BitStreamMem);
 
@@ -73,7 +185,7 @@ logic [16:0] Mask;
 
   $display("Bit Stream Mem");
   
-  for(i=0;i<20;i++) $display("%x ",BitStreamMem[i]);
+  for(i=0;i<30;i++) $display("%x ",BitStreamMem[i]);
   $display("\n");
   
   for(i=1;i<NumWords-1;i++) begin
@@ -82,12 +194,25 @@ logic [16:0] Mask;
     CurrentWord = BitStreamMem[i];
     NextWord = BitStreamMem[i+1];
     
+    if (i<=30) LongStream = {LongStream[16*30-16-1:0],CurrentWord};
+    
+    
     CurrentWord = CurrentWord << StreamOffset;
     NextWord = NextWord >> (16-StreamOffset);
     CurrentWord = CurrentWord | NextWord;
     
     BitStreamMem[i-1] = CurrentWord;
     
+  end
+
+  
+  $display("Long Bit Stream Shifted Version");
+    LongStream = LongStream << StreamOffset;
+  for(i=0;i<30;i++) begin 
+    CurrentWord = LongStream[16*30-1:16*30-16];
+    if (CurrentWord == BitStreamMem[i])    $display("%x %x ok",CurrentWord,BitStreamMem[i]);
+    else    $display("%x %x bad",CurrentWord,BitStreamMem[i]);
+    LongStream = LongStream << 16;
   end
 
 endfunction

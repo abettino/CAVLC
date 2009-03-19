@@ -4,6 +4,7 @@ module CoeffTokenDecode (
                          input logic nReset,
                          input logic Enable,
                          input logic [15:0] BitstreamShifted,
+                         input logic  [4:0] nC,
                          output logic [4:0] TotalCoeff,
                          output logic [1:0] TrailingOnes,
                          output logic [4:0] NumShift
@@ -25,8 +26,10 @@ logic [4:0]                                 TotalCoeff48;
 logic [1:0]                                 TrailingOnes48;
 logic [4:0]                                 NumShift48;
 
+logic [4:0]                                 TotalCoeff8;
+logic [1:0]                                 TrailingOnes8;
+logic [4:0]                                 NumShift8;
 
-logic [4:0]                                 nC;
 
 logic [4:0]                                 TotalCoeffPrev;
 logic [1:0]                                 CoeffCnt;
@@ -58,11 +61,17 @@ always_comb begin
       TrailingOnesInt = TrailingOnes02;
       NumShift = NumShift02;
     end
-    5,6,7,8 : begin
+    5,6,7 : begin
       TotalCoeffInt = TotalCoeff48;
       TrailingOnesInt = TrailingOnes48;
       NumShift = NumShift48;
     end
+    8,9,10,11,12,13,14,15,16 : begin
+      TotalCoeffInt = TotalCoeff8;
+      TrailingOnesInt = TrailingOnes8;
+      NumShift = NumShift8;
+    end
+
     default : begin
       TotalCoeffInt = 'x;
       TrailingOnesInt = 'x;
@@ -88,6 +97,14 @@ CoeffTokenROM48 uCoeffTokenROM48 (
                                   );
 
 
+CoeffTokenROM8 uCoeffTokenROM8 (
+                                  .Address     (BitstreamShifted), 
+                                  .TotalCoeff  (TotalCoeff8), 
+                                  .TrailingOnes(TrailingOnes8),
+                                  .NumShift    (NumShift8)
+                                  );
+
+/*
 always_ff @(posedge Clk or negedge nReset) begin
   if (!nReset) begin
     TotalCoeffPrev <= '0;
@@ -103,9 +120,11 @@ always_ff @(posedge Clk or negedge nReset) begin
     if (CoeffCnt==0) nC <= '0;
     else if (CoeffCnt==1) nC <= TotalCoeff;
     else nC <= (TotalCoeff + TotalCoeffPrev) >> 1;
+//    if (Enable) nC <= TotalCoeffInt;
+    
   end
 end
-
+*/
 /*
 always_ff @(posedge Clk or negedge nReset) begin
   if (!nReset) begin

@@ -14,7 +14,8 @@ module CTRLFSM (
                 output logic  [4:0] NumShift,
                 output logic        CoeffTokenDecodeEnable,
                 output logic        LevelDecodeEnable,
-                output logic        ZeroDecodeEnable
+                output logic        ZeroDecodeEnable,
+                output logic        BlockDone
 );
 
 
@@ -77,11 +78,15 @@ always_ff @(posedge Clk or negedge nReset)
     CoeffTokenDecodeEnable <= '0;
     LevelDecodeEnable      <= '0;
     ZeroDecodeEnable <= '0;
+    BlockDone <= '0;
   end
   else begin
     CoeffTokenDecodeEnable <= (CurrentState==COEFF_TOKEN_0);
     LevelDecodeEnable <= (CurrentState==LEVEL_DECODE);
     ZeroDecodeEnable <= (CurrentState==ZERO_DECODE);
+    BlockDone <= (CurrentState==ZERO_DECODE) && ZeroDecodeDone;
   end
+
+
 
 endmodule

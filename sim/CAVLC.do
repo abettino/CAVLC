@@ -1,6 +1,13 @@
-vlog -work work  ../rtl/CoeffTokenDecode.sv \
-../rtl/CoeffTokenROM02.v \
+set compile_roms false
+
+
+if ([string equal $compile_roms "true"]) {
+vlog -work work  ../rtl/CoeffTokenROM02.v \
 ../rtl/CoeffTokenROM48.v \
+../rtl/CoeffTokenROM8.v \
+}
+
+vlog -work work  ../rtl/CoeffTokenDecode.sv \
 ../rtl/FIFOMemory.v \
 ../rtl/FIFO.sv \
 ../rtl/CTRLFSM.sv \
