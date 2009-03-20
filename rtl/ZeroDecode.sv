@@ -36,7 +36,7 @@ always_ff @(posedge Clk or negedge nReset)
 
 always_comb begin
   unique case (CurrentState)
-    IDLE : if (Enable) NextState = TOTAL_ZERO;
+    IDLE : if (Enable && TotalCoeff > 1) NextState = TOTAL_ZERO;
     else NextState = IDLE;
     TOTAL_ZERO : NextState = ZERO_RUN;
     ZERO_RUN : if (ZeroesLeft == 0) NextState = WAIT;
@@ -112,7 +112,7 @@ always_ff @(posedge Clk or negedge nReset)
     Done <= '0;
   end
   else begin
-    if (CurrentState == ZERO_RUN && ZeroesLeft==0) Done <= 1'b1;
+    if ((Enable && TotalCoeff <= 1) || (CurrentState == ZERO_RUN && ZeroesLeft==0)) Done <= 1'b1;
     else Done <= 1'b0;
   end
 endmodule

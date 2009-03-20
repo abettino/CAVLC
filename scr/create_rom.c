@@ -16,7 +16,7 @@ int main () {
   int max_value;
   int i;
   int j;
-  if(!(file = fopen("coeff_token_8_nospace.dat","r"))) {
+  if(!(file = fopen("coeff_token_2_4_nospace.dat","r"))) {
     printf("error file\n");
     return -1;
   }

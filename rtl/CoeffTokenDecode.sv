@@ -26,6 +26,10 @@ logic [4:0]                                 TotalCoeff48;
 logic [1:0]                                 TrailingOnes48;
 logic [4:0]                                 NumShift48;
 
+logic [4:0]                                 TotalCoeff24;
+logic [1:0]                                 TrailingOnes24;
+logic [4:0]                                 NumShift24;
+
 logic [4:0]                                 TotalCoeff8;
 logic [1:0]                                 TrailingOnes8;
 logic [4:0]                                 NumShift8;
@@ -56,10 +60,15 @@ always_ff @(posedge Clk or negedge nReset)
 
 always_comb begin
   case (nC)
-    0,1,2 : begin 
+    0,1 : begin 
       TotalCoeffInt = TotalCoeff02;
       TrailingOnesInt = TrailingOnes02;
       NumShift = NumShift02;
+    end
+    2,3,4 : begin
+      TotalCoeffInt = TotalCoeff24;
+      TrailingOnesInt = TrailingOnes24;
+      NumShift = NumShift24;
     end
     5,6,7 : begin
       TotalCoeffInt = TotalCoeff48;
@@ -102,6 +111,13 @@ CoeffTokenROM8 uCoeffTokenROM8 (
                                   .TotalCoeff  (TotalCoeff8), 
                                   .TrailingOnes(TrailingOnes8),
                                   .NumShift    (NumShift8)
+                                  );
+
+CoeffTokenROM24 uCoeffTokenROM24 (
+                                  .Address     (BitstreamShifted), 
+                                  .TotalCoeff  (TotalCoeff24), 
+                                  .TrailingOnes(TrailingOnes24),
+                                  .NumShift    (NumShift24)
                                   );
 
 /*

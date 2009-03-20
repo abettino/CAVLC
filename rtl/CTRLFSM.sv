@@ -3,6 +3,7 @@ module CTRLFSM (
                 input  logic        nReset,           // Async reset.           
                 input  logic        Enable,
                 input  logic        BarrelShifterReady,
+                input  logic  [4:0] TotalCoeff,      
                 input  logic  [4:0] NumShift_CoeffTokenDecode,
                 input  logic  [4:0] NumShift_LevelDecode,
                 input  logic        ShiftEn_LevelDecode,
@@ -42,7 +43,8 @@ always_comb begin
                     else                             NextState = WAIT_ENABLE;
     COEFF_TOKEN_0 : NextState = COEFF_TOKEN_1;
     COEFF_TOKEN_1 : NextState = LEVEL_DECODE;
-    LEVEL_DECODE  : if (LevelDecodeDone) NextState = ZERO_DECODE;
+    LEVEL_DECODE  : //if (LevelDecodeDone && (TotalCoeff > 1)) NextState = ZERO_DECODE;
+                    if (LevelDecodeDone) NextState = ZERO_DECODE;
                     else NextState = LEVEL_DECODE;
     ZERO_DECODE   : if (!ZeroDecodeDone) NextState = ZERO_DECODE;
                     else if (!Enable) NextState = WAIT_ENABLE;
@@ -84,7 +86,11 @@ always_ff @(posedge Clk or negedge nReset)
     CoeffTokenDecodeEnable <= (CurrentState==COEFF_TOKEN_0);
     LevelDecodeEnable <= (CurrentState==LEVEL_DECODE);
     ZeroDecodeEnable <= (CurrentState==ZERO_DECODE);
-    BlockDone <= (CurrentState==ZERO_DECODE) && ZeroDecodeDone;
+    BlockDone <= ((CurrentState==ZERO_DECODE) && ZeroDecodeDone);
+    
+//                 ((CurrentState==LEVEL_DECODE) && TotalCoeff <= 1 && LevelDecodeDone);
+    
+
   end
 
 

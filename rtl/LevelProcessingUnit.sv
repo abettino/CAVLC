@@ -28,7 +28,7 @@ always_ff @(posedge Clk or negedge nReset)
     MidCalc <= '0;
     WrReq <= '0;
   end
-  else if (TrailingOneMode) begin
+  else if (TrailingOneMode & LPUTrig) begin
     MidCalc <= CodeNum[0] ? '1 : 'h02;
     WrReq <= '1;
   end

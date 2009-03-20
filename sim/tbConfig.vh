@@ -5,3 +5,4 @@
 `define HBLOCKS `HRES/16
 `define VBLOCKS `VRES/16
 
+`define SIM_BLOCKS 20

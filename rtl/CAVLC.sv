@@ -60,6 +60,7 @@ CTRLFSM uCTRLFSM (
   .nReset                   (nReset),           
   .Enable                   (Enable),
   .BarrelShifterReady       (BarrelShifterReady),
+  .TotalCoeff               (TotalCoeff),
   .NumShift_CoeffTokenDecode(NumShift_CoeffTokenDecode),
   .NumShift_LevelDecode     (NumShift_LevelDecode),               
   .ShiftEn_LevelDecode      (ShiftEn_LevelDecode),                

@@ -5,6 +5,7 @@ if ([string equal $compile_roms "true"]) {
 vlog -work work  ../rtl/CoeffTokenROM02.v \
 ../rtl/CoeffTokenROM48.v \
 ../rtl/CoeffTokenROM8.v \
+../rtl/CoeffTokenROM24.v
 }
 
 vlog -work work  ../rtl/CoeffTokenDecode.sv \

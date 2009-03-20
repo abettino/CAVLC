@@ -30,7 +30,8 @@ logic                            TrailingOneMode;
 
 
 // Count if done.
-assign Done = (CoeffCount == (TotalCoeff-1)) && !StallPipeLine;
+assign Done = (TotalCoeff > 1) ? (CoeffCount == (TotalCoeff-1)) && !StallPipeLine : DoneInt;
+
 assign DoneInt = (CoeffCount == TotalCoeff);
 
 always_ff @(posedge Clk or negedge nReset)

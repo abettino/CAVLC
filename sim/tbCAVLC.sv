@@ -19,8 +19,8 @@ endclocking : cb
 
 modport TB (clocking cb);
 
-modport DUT (  output        LevelOut,RdReq,WrReq,BlockDone,TotalCoeffOut,
-               input       nReset,Bitstream, Enable,nC);
+modport DUT (output      LevelOut,RdReq,WrReq,BlockDone,TotalCoeffOut,
+             input       nReset,Bitstream, Enable,nC);
 
 endinterface
 
@@ -71,11 +71,12 @@ initial begin
   b1.LoadLevels("../stim/levels0.dat");
   b1.DisplayLevels(10);
   b1.Run();
+  b1.RunLevelCheck();
   n1.Run();
   
   
-
-  #3000 $stop;
+  wait (b1.BlockCnt==`SIM_BLOCKS);
+  $stop;
   
 end
 
