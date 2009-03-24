@@ -34,6 +34,13 @@ logic [4:0]                                 TotalCoeff8;
 logic [1:0]                                 TrailingOnes8;
 logic [4:0]                                 NumShift8;
 
+logic [4:0]                                 TotalCoeffNeg1;
+logic [1:0]                                 TrailingOnesNeg1;
+logic [4:0]                                 NumShiftNeg1;
+
+logic [4:0]                                 TotalCoeffNeg2;
+logic [1:0]                                 TrailingOnesNeg2;
+logic [4:0]                                 NumShiftNeg2;
 
 logic [4:0]                                 TotalCoeffPrev;
 logic [1:0]                                 CoeffCnt;
@@ -80,7 +87,16 @@ always_comb begin
       TrailingOnesInt = TrailingOnes8;
       NumShift = NumShift8;
     end
-
+    'b11111 : begin
+      TotalCoeffInt = TotalCoeffNeg1;
+      TrailingOnesInt = TrailingOnesNeg1;
+      NumShift = NumShiftNeg1;
+    end
+    'b11110 : begin
+      TotalCoeffInt = TotalCoeffNeg2;
+      TrailingOnesInt = TrailingOnesNeg2;
+      NumShift = NumShiftNeg2;
+    end
     default : begin
       TotalCoeffInt = 'x;
       TrailingOnesInt = 'x;
@@ -118,6 +134,20 @@ CoeffTokenROM24 uCoeffTokenROM24 (
                                   .TotalCoeff  (TotalCoeff24), 
                                   .TrailingOnes(TrailingOnes24),
                                   .NumShift    (NumShift24)
+                                  );
+
+CoeffTokenROMNeg1 uCoeffTokenROMNeg1 (
+                                  .Address     (BitstreamShifted), 
+                                  .TotalCoeff  (TotalCoeffNeg1), 
+                                  .TrailingOnes(TrailingOnesNeg1),
+                                  .NumShift    (NumShiftNeg1)
+                                  );
+
+CoeffTokenROMNeg2 uCoeffTokenROMNeg2 (
+                                  .Address     (BitstreamShifted), 
+                                  .TotalCoeff  (TotalCoeffNeg2), 
+                                  .TrailingOnes(TrailingOnesNeg2),
+                                  .NumShift    (NumShiftNeg2)
                                   );
 
 /*

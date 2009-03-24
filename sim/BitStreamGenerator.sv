@@ -32,6 +32,7 @@ int         BigBlockCnt;
 int         BlockCnt;
 int         XPos,YPos;
 int         TotalBigBlocks;
+int         TotalBlockCnt;
   
 
   function new(virtual CAVLCIntfc a);
@@ -84,15 +85,24 @@ virtual task Run();
         nB =  0;
       end
 
-      if (nBAvail && nAAvail) begin 
-        if ((nA + nB) & 'h1)    CAVLCIntfc.nC = (nA+nB)/2 + 1; // odd number
-        else    CAVLCIntfc.nC = (nA+nB)/2;
+      if (TotalBlockCnt==16 || TotalBlockCnt==17) begin
+        CAVLCIntfc.nC = 5'b11111;
       end
-      else CAVLCIntfc.nC = nA+nB;
+//      else if (TotalBlockCnt==18 || TotalBlockCnt==19) begin
+//        CAVLCIntfc.nC = 5'b11110;
+//      end
+      else begin
+        if (nBAvail && nAAvail) begin 
+          if ((nA + nB) & 'h1)    CAVLCIntfc.nC = (nA+nB)/2 + 1; // odd number
+          else    CAVLCIntfc.nC = (nA+nB)/2;
+        end
+        else CAVLCIntfc.nC = nA+nB;
+      end
 
-      if (CAVLCIntfc.BlockDone) begin
+      if (CAVLCIntfc.BlockDone && TotalBlockCnt < 16) begin
+        TotalBlockCnt++;
         TotalCoeffMatrix[XPos][YPos] = CAVLCIntfc.TotalCoeffOut;
-        $display("XPos: %d, YPos: %d, SmallBlockCnt %d, BigBlockCnt %d TotalBigBlocks: %d, TotalCoeff: %d", XPos,YPos,SmallBlockCnt,BigBlockCnt,TotalBigBlocks,CAVLCIntfc.TotalCoeffOut);
+//        $display("XPos: %d, YPos: %d, SmallBlockCnt %d, BigBlockCnt %d TotalBigBlocks: %d, TotalCoeff: %d", XPos,YPos,SmallBlockCnt,BigBlockCnt,TotalBigBlocks,CAVLCIntfc.TotalCoeffOut);
         
         if (SmallBlockCnt==3) begin 
           SmallBlockCnt = 0;
@@ -125,175 +135,17 @@ virtual task Run();
           if (SmallBlockCnt == 0 || SmallBlockCnt==2)   XPos = 2+4*TotalBigBlocks;
           else            XPos = 3+4*TotalBigBlocks;
         end
-        $display("XPos: %d, YPos: %d, SmallBlockCnt %d, BigBlockCnt %d TotalBigBlocks: %d", XPos,YPos,SmallBlockCnt,BigBlockCnt,TotalBigBlocks);
+//        $display("XPos: %d, YPos: %d, SmallBlockCnt %d, BigBlockCnt %d TotalBigBlocks: %d", XPos,YPos,SmallBlockCnt,BigBlockCnt,TotalBigBlocks);
+      end
+      else begin
+        if (CAVLCIntfc.BlockDone) begin
+          if (TotalBlockCnt == 17) TotalBlockCnt=0;
+          else TotalBlockCnt++;
+        end
       end
     end
   join_none
 
-/*    while (1) begin
-      @(CAVLCIntfc.cb);
-
-      case (SmallBlockCnt)
-        0 : begin
-          if (BigBlockCnt==0 || BigBlockCnt==2) begin
-            if ((BlockCnt - 11) >= 0) begin
-              nAAvail = 1;
-              nA = AllCoeffs[BlockCnt-11];
-            end
-            else begin
-              nA = 0;
-              nAAvail =0;
-            end
-            if ((BlockCnt - 6) >= 0) begin
-              nBAvail = 1;
-              nB = AllCoeffs[BlockCnt-6];
-            end
-            else begin
-              nB = 0;
-              nBAvail = 0;
-            end
-          end
-          else begin
-            if ((BlockCnt - 6) >= 0) begin
-              nAAvail = 1;
-              nA = AllCoeffs[BlockCnt-6];
-            end
-            else begin
-              nA = 0;
-              nAAvail =0;
-            end
-            if ((BlockCnt - 6) >= 0) begin
-              nBAvail = 1;
-              nB = AllCoeffs[BlockCnt-6];
-            end
-            else begin
-              nB = 0;
-              nBAvail = 0;
-            end
- if (UpperCoeffBlock[2] !== 'x) begin
-            nB = UpperCoeffBlock[2];
-            nBAvail = 1;
-          end
-          else begin
-            nB = 0;
-            nBAvail = 0;
-
-          end
-
-          if (LeftCoeffBlock[1] !== 'x) begin
-            nA = LeftCoeffBlock[1];
-            nAAvail =1;
-          end
-          else begin
-            nA = 0;
-            nAAvail =0;
-          end
-
-        end
-        1 : begin
-          if (UpperCoeffBlock[3] !== 'x) begin
-            nB = UpperCoeffBlock[3];
-            nBAvail = 1;
-          end
-          else begin
-            nB = 0;
-            nBAvail = 0;
-          end
-          nA = CurrentCoeffBlock[0];
-          nAAvail = 1;
-        end
-        2 : begin
-          nB = CurrentCoeffBlock[0];
-          nBAvail = 1;
-          if (LeftCoeffBlock[3] !== 'x) begin
-            nA = LeftCoeffBlock[3];
-            nAAvail = 1;
-          end
-          else begin
-            nA = 0;           // 
-            nAAvail = 0;      // 
-          end
-        end
-        3  : begin
-          nA = CurrentCoeffBlock[2];
-          nB = CurrentCoeffBlock[1];
-          nAAvail = 1;
-          nBAvail = 1;
-        end
-      endcase
-
-      if (nBAvail && nAAvail) begin 
-        if ((nA + nB) & 'h1)    CAVLCIntfc.nC = (nA+nB)/2 + 1; // odd number
-        else    CAVLCIntfc.nC = (nA+nB)/2;
-      end
-      else CAVLCIntfc.nC = nA+nB;
-
-      if (CAVLCIntfc.BlockDone) begin
-//        TotalCoeffMatrix[HCountSB][VCountSB] = CAVLCIntfc.TotalCoeffOut;
-        AllCoeffs[BlockCnt++] = CAVLCIntfc.TotalCoeffOut;
-        if (HCountSB == `HBLOCKS/4-1) begin
-          HCountSB = 0;
-          VCountSB++;
-        end
-        else begin
-          HCountSB++;
-        end
-
-        $display("nA: %d nB: %d SmallBlockCnt: %d",nA,nB,SmallBlockCnt); // 
-        CurrentCoeffBlock[SmallBlockCnt] = CAVLCIntfc.TotalCoeffOut;
-        if (SmallBlockCnt==3) begin
-          if (HCount == `HBLOCKS-1  && VCount==`VBLOCKS-1) begin
-            VCount=0;
-            HCount=0;
-            Init();
-          end
-          else if (HCount == `HBLOCKS-1) begin
-            HCount = 0;
-            VCount++;
-            Init();
-          end
-          else begin
-            HCount++;
-          end
-          SmallBlockCnt=0;
-          for (int i=0;i<4;i++) begin
-            PrevCoeffBlock3[i] = PrevCoeffBlock2[i];
-            PrevCoeffBlock2[i] = PrevCoeffBlock[i];
-            PrevCoeffBlock[i] = CurrentCoeffBlock[i];
-
-//            $display("load block: %d",PrevCoeffBlock[i]);
-          end
-
-          case (BigBlockCnt)
-            0 : begin
-              for (int i=0;i<4;i++) begin
-                LeftCoeffBlock[i] = PrevCoeffBlock[i];
-                UpperCoeffBlock[i] = 'x;
-              end
-            end
-            1 : begin
-              for (int i=0;i<4;i++) begin
-                LeftCoeffBlock[i] = 'x;
-                UpperCoeffBlock[i] = PrevCoeffBlock2[i];
-              end
-            end
-            2 : begin
-              for (int i=0;i<4;i++) begin
-                LeftCoeffBlock[i] = PrevCoeffBlock[i];
-                UpperCoeffBlock[i] = PrevCoeffBlock2[i];
-              end
-            end
-          endcase
-          if (BigBlockCnt == 3) BigBlockCnt = 0;
-          else BigBlockCnt++;
-        end else begin
-          SmallBlockCnt++;
-        end
-      end
-
-    end
-  join_none
-*/
 endtask
 
 endclass
@@ -344,7 +196,7 @@ virtual task RunLevelCheck();
     if (CAVLCIntfc.BlockDone) begin
       for(int i=0;i<CAVLCIntfc.TotalCoeffOut;i++) begin
         if (LevelSim[i] !== Levels[i][BlockCnt]) begin
-          $display("LEVEL CHECK ERROR: Block=%d, Got=%d, Expected=%d",BlockCnt,LevelSim[i],Levels[i][BlockCnt]);
+          $display("LEVEL CHECK ERROR: Block=%d, Got=%d, Expected=%d at time=%d",BlockCnt,LevelSim[i],Levels[i][BlockCnt],$time);
           error_cnt++;
           $stop;
         end

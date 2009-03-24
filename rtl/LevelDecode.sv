@@ -27,12 +27,22 @@ logic                            DoneInt;
 
 logic [1:0]                      TrailingOnesLeft;
 logic                            TrailingOneMode;
+logic                            DoneReg;
+logic                            EnablePulse;
+logic                            OneCoeffDone;
 
 
 // Count if done.
 assign Done = (TotalCoeff > 1) ? (CoeffCount == (TotalCoeff-1)) && !StallPipeLine : DoneInt;
 
-assign DoneInt = (CoeffCount == TotalCoeff);
+assign DoneInt = (CoeffCount >= TotalCoeff);
+
+PulseGenRising uPulseGenRising(.Clk(Clk),.nReset(nReset),.D(Enable),.Pulse(EnablePulse));
+
+always_ff @(posedge Clk or negedge nReset)
+  if (!nReset) DoneReg <= '0;
+  else if (!Enable) DoneReg <= '0;
+  else if (Enable & DoneInt) DoneReg <= '1;
 
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) CoeffCount <= '0;
@@ -96,11 +106,13 @@ always_ff @(posedge Clk or negedge nReset)
     PrevOnePos <= '0;
     TrailingOnesLeft <= '0;
     TrailingOneMode <= '0;
-    
+    OneCoeffDone <= '0;
   end
   else begin
+    if (!Enable) OneCoeffDone <= 1'b0;
+    else if (ShiftEn && TotalCoeff==1) OneCoeffDone <= 1'b1;
+    
     if (Enable & !DoneInt) begin
-      
       if (|TrailingOnesLeft) TrailingOnesLeft <= TrailingOnesLeft - 1;
       TrailingOneMode <= |TrailingOnesLeft;
       
@@ -147,7 +159,8 @@ always_ff @(posedge Clk or negedge nReset)
   end
 
 always_comb begin
-  if (Enable) begin
+//  if (Enable) begin
+  if (Enable & !DoneInt) begin
     if (|TrailingOnesLeft) begin
       NumShift = 1;
       ShiftEn = '1;

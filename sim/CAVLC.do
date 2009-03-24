@@ -5,7 +5,9 @@ if ([string equal $compile_roms "true"]) {
 vlog -work work  ../rtl/CoeffTokenROM02.v \
 ../rtl/CoeffTokenROM48.v \
 ../rtl/CoeffTokenROM8.v \
-../rtl/CoeffTokenROM24.v
+../rtl/CoeffTokenROM24.v \
+../rtl/CoeffTokenROMNeg1.v \
+../rtl/CoeffTokenROMNeg2.v 
 }
 
 vlog -work work  ../rtl/CoeffTokenDecode.sv \
@@ -48,6 +50,9 @@ add wave -group {Zero Decode} -radix 16 {tbCAVLC/uCAVLC/uZeroDecode/*}
 add wave -group {Run before table} -radix 16 {tbCAVLC/uCAVLC/uZeroDecode/uRunBeforeTable/*}
 add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/LevelOut}
 add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/WrReq}
-
+add wave -group {Top out} -radix 16 {tbCAVLC/uCAVLC/Enable}
+add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/nC}
+add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/BlockDone}
+add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/TotalCoeffOut}
 
 run -all
