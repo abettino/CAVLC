@@ -1,17 +1,22 @@
+////////////////////////////////////////////////////////////////////////////////
+//  File : LevelDecode.sv
+//  Desc : Level Decode.
+//   
+////////////////////////////////////////////////////////////////////////////////
 module LevelDecode (
-                    input  logic Clk,
-                    input  logic nReset,
-                    input  logic Enable,
-                    input  logic [15:0] BitstreamShifted,
-                    input  logic [4:0] TotalCoeff,
-                    input  logic [1:0] TrailingOnes,
-                    output logic [4:0] NumShift,
-                    output logic ShiftEn,
-                    output logic [12:0] LevelOut,
-                    output logic WrReq,
-                    output logic Done
-                    );
-
+  input  logic        Clk,              // clock.
+  input  logic        nReset,           // reset.
+  input  logic        Enable,           // enable.
+  input  logic [15:0] BitstreamShifted, // shifted bitstream.
+  input  logic  [4:0] TotalCoeff,       // From CoeffTokenDecode.
+  input  logic  [1:0] TrailingOnes,     // From CoeffTokenDecode.
+  output logic  [4:0] NumShift,         // Control Barrelshifter.
+  output logic        ShiftEn,          // Control Barrelshifter.
+  output logic [12:0] LevelOut,         // Output level.
+  output logic        WrReq,            // Output write request.
+  output logic        Done              // Level Done.
+);
+// Declarations.
 logic [2:0]                      SuffixLength;
 logic [2:0]                      SuffixLengthLPU;
 logic [13:0]                     LevelCode;
@@ -27,29 +32,29 @@ logic                            DoneInt;
 
 logic [1:0]                      TrailingOnesLeft;
 logic                            TrailingOneMode;
-logic                            DoneReg;
-logic                            EnablePulse;
 logic                            OneCoeffDone;
 
 
-// Count if done.
+// External Done signal.
 assign Done = (TotalCoeff > 1) ? (CoeffCount == (TotalCoeff-1)) && !StallPipeLine : DoneInt;
-
+// Internal done signal.
 assign DoneInt = (CoeffCount >= TotalCoeff);
-
-PulseGenRising uPulseGenRising(.Clk(Clk),.nReset(nReset),.D(Enable),.Pulse(EnablePulse));
-
-always_ff @(posedge Clk or negedge nReset)
-  if (!nReset) DoneReg <= '0;
-  else if (!Enable) DoneReg <= '0;
-  else if (Enable & DoneInt) DoneReg <= '1;
-
+// Count coefficients while processing.
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) CoeffCount <= '0;
   else if (!Enable) CoeffCount <= '0;
   else if (Enable & !StallPipeLine) CoeffCount <= CoeffCount + 1;
-
-// Suffix Length control.
+////////////////////////////////////////////////////////////////////////////////
+// Suffix Length control. Implemenation of the suffix rule.
+// current suffix length    level threshold
+//-----------------------------------------
+//      0                     0
+//      1                     3
+//      2                     6
+//      3                     12
+//      4                     24
+//      5                     48
+//      6                     n/a
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin
     SuffixLength <= '0;
@@ -69,15 +74,15 @@ always_ff @(posedge Clk or negedge nReset)
       SuffixLength <= '0;
     end
   end
-
-
+////////////////////////////////////////////////////////////////////////////////
 // one finder.
 OneFinder uOneFinder (
   .BitstreamShifted(BitstreamShifted),
   .OnePos(OnePos),
   .ExtraBit(ExtraBit)
 );
-
+// Condition to stall the pipeline when the prefix length
+// gets very large.
 always_comb begin 
   case(SuffixLength)
     0 : begin
@@ -95,7 +100,8 @@ always_comb begin
     end
   endcase
 end
-
+// Calculate the code number based on current suffix length
+// and the one position.
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin
     LevelCode <= '0;
@@ -131,7 +137,6 @@ always_ff @(posedge Clk or negedge nReset)
         0 : begin
           if (OnePos <= 13) CodeNum <= OnePos;
           else if (OnePos > 13 && OnePos <= 29) CodeNum <= 14+BitstreamShifted[16:13];
-          //      else CodeNum <= 
           LPUTrig <= !StallPipeLine;
         end
         1 : begin
@@ -139,7 +144,6 @@ always_ff @(posedge Clk or negedge nReset)
           LPUTrig <= !StallPipeLine;
         end
         2 : begin
-//          CodeNum <= {OnePos,2'b0}+ExtraBit[4]+ExtraBit[3];
           if (!Stalled) CodeNum <= {OnePos,2'b0}+ExtraBit[4:3];
           else if (PrevOnePos=='hE) CodeNum <= 'd56+BitstreamShifted[15:14];
           else if (PrevOnePos=='hF) CodeNum <= 'd60+BitstreamShifted[15:4];
@@ -158,8 +162,8 @@ always_ff @(posedge Clk or negedge nReset)
     end
   end
 
+// Num shift logic.
 always_comb begin
-//  if (Enable) begin
   if (Enable & !DoneInt) begin
     if (|TrailingOnesLeft) begin
       NumShift = 1;
@@ -182,8 +186,6 @@ always_comb begin
             2'b11 : NumShift = OnePos + 1;
             2'b01 : NumShift = (PrevOnePos=='hE) ? 'd2 : 'd12;
           endcase
-          //        if (!StallPipeLine) NumShift = OnePos + 3;
-          //        else NumShift = OnePos+1;
           ShiftEn = '1;
         end
         default : begin
@@ -198,9 +200,8 @@ always_comb begin
     ShiftEn = '0;
   end
 end
-        
 
-
+// Level Process Unit. Convert CodeNum to LevelOut.
 LevelProcessingUnit uLevelProcessingUnit (
   .Clk          (Clk), 
   .nReset       (nReset), 

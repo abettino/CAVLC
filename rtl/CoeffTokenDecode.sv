@@ -1,70 +1,54 @@
-
+////////////////////////////////////////////////////////////////////////////////
+//  File : CoeffTokenDecode.sv
+//  Desc : Coeff token decoder.
+//   
+////////////////////////////////////////////////////////////////////////////////
 module CoeffTokenDecode (
-                         input logic Clk,
-                         input logic nReset,
-                         input logic Enable,
-                         input logic [15:0] BitstreamShifted,
-                         input logic  [4:0] nC,
-                         output logic [4:0] TotalCoeff,
-                         output logic [1:0] TrailingOnes,
-                         output logic [4:0] NumShift
+  input  logic        Clk,             // clock.
+  input  logic        nReset,          // reset.
+  input  logic        Enable,          // enable.
+  input  logic [15:0] BitstreamShifted,// shifted bitstream.
+  input  logic  [4:0] nC,              // nC, from external.
+  output logic  [4:0] TotalCoeff,      // Calculated total coeff.
+  output logic  [1:0] TrailingOnes,    // traillings ones.
+  output logic  [4:0] NumShift         // amount to shift.
                          );
 
-
-
-parameter COEFF_MEM_SIZE = 5;
-
-
+// Declarations.
+// Internal total coeff and trail ones signals.
 logic [4:0]                                 TotalCoeffInt;
 logic [1:0]                                 TrailingOnesInt;
-
+// Total coeff, trailing ones, num shift for 0 <= nC < 2
 logic [4:0]                                 TotalCoeff02;
 logic [1:0]                                 TrailingOnes02;
 logic [4:0]                                 NumShift02;
-
+// Total coeff, trailing ones, num shift for 4 <= nC < 8 
 logic [4:0]                                 TotalCoeff48;
 logic [1:0]                                 TrailingOnes48;
 logic [4:0]                                 NumShift48;
-
+// Total coeff, trailing ones, num shift for 2 <= nC < 4 
 logic [4:0]                                 TotalCoeff24;
 logic [1:0]                                 TrailingOnes24;
 logic [4:0]                                 NumShift24;
-
+// Total coeff, trailing ones, num shift for nC >= 8 
 logic [4:0]                                 TotalCoeff8;
 logic [1:0]                                 TrailingOnes8;
 logic [4:0]                                 NumShift8;
-
+// Total coeff, trailing ones, num shift for nC == -1 
 logic [4:0]                                 TotalCoeffNeg1;
 logic [1:0]                                 TrailingOnesNeg1;
 logic [4:0]                                 NumShiftNeg1;
-
+// Total coeff, trailing ones, num shift for nC == -2 
 logic [4:0]                                 TotalCoeffNeg2;
 logic [1:0]                                 TrailingOnesNeg2;
 logic [4:0]                                 NumShiftNeg2;
 
-logic [4:0]                                 TotalCoeffPrev;
-logic [1:0]                                 CoeffCnt;
-
-
-logic [4:0]                                 TotalCoeffMem[0:COEFF_MEM_SIZE-1];
-logic [2:0]                                 CoeffMemPtr;
-logic [2:0]                                 CoeffMemCnt;
-logic [2:0]                                 CoeffSamples;
-logic [15:0]                                TotalCoeffSum;
-logic [4:0]                                 TotalCoeffAvg;
-logic                                       CalcAvg;                                    
-
-
-
-//always_ff @(posedge Clk or negedge nReset)
-//  if (!nReset) nC <= '0;
-//  else nC <= TotalCoeffAvg;
-
-
+// Sync. Total Coeff and Trailing ones logic.
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) {TotalCoeff,TrailingOnes} <= {'0,'0};
   else if (Enable) {TotalCoeff,TrailingOnes} <= {TotalCoeffInt,TrailingOnesInt};
 
+// Mux selects which table based on nC
 always_comb begin
   case (nC)
     0,1 : begin 
@@ -105,112 +89,47 @@ always_comb begin
   endcase
 end
 
+// ROM for 0 <= nC < 2
 CoeffTokenROM02 uCoeffTokenROM02 (
-                                  .Address     (BitstreamShifted), 
-                                  .TotalCoeff  (TotalCoeff02), 
-                                  .TrailingOnes(TrailingOnes02),
-                                  .NumShift    (NumShift02)
+  .Address     (BitstreamShifted), 
+  .TotalCoeff  (TotalCoeff02), 
+  .TrailingOnes(TrailingOnes02),
+  .NumShift    (NumShift02)
                                   );
-
-
-
+// ROM for 4 <= nC < 8
 CoeffTokenROM48 uCoeffTokenROM48 (
-                                  .Address     (BitstreamShifted), 
-                                  .TotalCoeff  (TotalCoeff48), 
-                                  .TrailingOnes(TrailingOnes48),
-                                  .NumShift    (NumShift48)
+  .Address     (BitstreamShifted), 
+  .TotalCoeff  (TotalCoeff48), 
+  .TrailingOnes(TrailingOnes48),
+  .NumShift    (NumShift48)
                                   );
-
-
+// ROM for nC >= 8
 CoeffTokenROM8 uCoeffTokenROM8 (
-                                  .Address     (BitstreamShifted), 
-                                  .TotalCoeff  (TotalCoeff8), 
-                                  .TrailingOnes(TrailingOnes8),
-                                  .NumShift    (NumShift8)
+  .Address     (BitstreamShifted), 
+  .TotalCoeff  (TotalCoeff8), 
+  .TrailingOnes(TrailingOnes8),
+  .NumShift    (NumShift8)
                                   );
-
+// ROM for 2 <= nC < 4
 CoeffTokenROM24 uCoeffTokenROM24 (
-                                  .Address     (BitstreamShifted), 
-                                  .TotalCoeff  (TotalCoeff24), 
-                                  .TrailingOnes(TrailingOnes24),
-                                  .NumShift    (NumShift24)
+  .Address     (BitstreamShifted), 
+  .TotalCoeff  (TotalCoeff24), 
+  .TrailingOnes(TrailingOnes24),
+  .NumShift    (NumShift24)
                                   );
-
+// ROM for nC == -1
 CoeffTokenROMNeg1 uCoeffTokenROMNeg1 (
-                                  .Address     (BitstreamShifted), 
-                                  .TotalCoeff  (TotalCoeffNeg1), 
-                                  .TrailingOnes(TrailingOnesNeg1),
-                                  .NumShift    (NumShiftNeg1)
+ .Address     (BitstreamShifted), 
+ .TotalCoeff  (TotalCoeffNeg1), 
+ .TrailingOnes(TrailingOnesNeg1),
+ .NumShift    (NumShiftNeg1)
                                   );
-
+// ROM for nC == -2
 CoeffTokenROMNeg2 uCoeffTokenROMNeg2 (
-                                  .Address     (BitstreamShifted), 
-                                  .TotalCoeff  (TotalCoeffNeg2), 
-                                  .TrailingOnes(TrailingOnesNeg2),
-                                  .NumShift    (NumShiftNeg2)
+  .Address     (BitstreamShifted), 
+  .TotalCoeff  (TotalCoeffNeg2), 
+  .TrailingOnes(TrailingOnesNeg2),
+  .NumShift    (NumShiftNeg2)
                                   );
-
-/*
-always_ff @(posedge Clk or negedge nReset) begin
-  if (!nReset) begin
-    TotalCoeffPrev <= '0;
-    CoeffCnt <= '0;
-    nC <= '0;
-  end
-  else begin
-    if (Enable) begin
-      TotalCoeffPrev <= TotalCoeff;
-      CoeffCnt <= {CoeffCnt[0],1'b1};
-    end
-
-    if (CoeffCnt==0) nC <= '0;
-    else if (CoeffCnt==1) nC <= TotalCoeff;
-    else nC <= (TotalCoeff + TotalCoeffPrev) >> 1;
-//    if (Enable) nC <= TotalCoeffInt;
-    
-  end
-end
-*/
-/*
-always_ff @(posedge Clk or negedge nReset) begin
-  if (!nReset) begin
-    for (int i=0;i<COEFF_MEM_SIZE;i++) TotalCoeffMem[i] <= '0;
-    CoeffMemPtr <= '0;
-    CoeffSamples <= '0;
-    CoeffMemCnt <= '0;
-    CalcAvg <= '0;
-    TotalCoeffSum <= '0;
-    TotalCoeffAvg <= '0;
-  end
-  else begin
-    if (Enable) begin
-      for (int i=0;i<COEFF_MEM_SIZE;i++) if (i==CoeffMemPtr) TotalCoeffMem[i] <= TotalCoeffInt;
-      if (CoeffMemPtr == COEFF_MEM_SIZE - 1) CoeffMemPtr <= 0;
-      else CoeffMemPtr <= CoeffMemPtr + 1;
-      if (CoeffMemPtr != COEFF_MEM_SIZE) CoeffSamples <= CoeffSamples + 1;
-      CalcAvg <= '1;
-      TotalCoeffSum <= '0;
-    end
-    else begin
-      if (CalcAvg) begin
-        if (CoeffMemCnt == CoeffSamples -1) begin
-          CoeffMemCnt <= 0;
-          CalcAvg <= '0;
-        end
-        else begin 
-          CoeffMemCnt <= CoeffMemCnt + 1;
-        end
-        for (int i=0;i<COEFF_MEM_SIZE;i++) if (i==CoeffMemCnt) TotalCoeffSum <= TotalCoeffSum + TotalCoeffMem[i];
-      end
-      else begin
-        if (CoeffSamples != 0) TotalCoeffAvg <= TotalCoeffSum/CoeffSamples;
-      end
-    end
-  end
-end
-*/
-
-
-
 
 endmodule
