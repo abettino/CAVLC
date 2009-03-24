@@ -1,4 +1,8 @@
-// Priority encoder for determininig first one position. and sign bit.
+////////////////////////////////////////////////////////////////////////////////
+//  File : OneFinder.sv
+//  Desc : Priority encoder for determininig first one position.
+//        also outputs "extra bits" which correspond to the suffx.
+////////////////////////////////////////////////////////////////////////////////
 module OneFinder (
                   input  logic [15:0] BitstreamShifted,
                   output logic [3:0] OnePos,

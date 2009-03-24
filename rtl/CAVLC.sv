@@ -1,17 +1,23 @@
+////////////////////////////////////////////////////////////////////////////////
+//  File : CAVLC.sv
+//  Desc : Top level CAVLC module. Instanites lower level modules
+//   and connects them together.
+////////////////////////////////////////////////////////////////////////////////
 module CAVLC (
-              input  logic        Clk,              // Clock.
-              input  logic        nReset,           // Async reset.
-              input  logic        Enable,
-              input  logic [4:0] nC,
-              input  logic [15:0] Bitstream,    // Input bitstream data.
-              output logic        RdReq,            // Read from the bistream source.
-              output logic [12:0] LevelOut,         // Decoded level output.
-              output logic        WrReq,            // Write to level buffer/fifo.
-              output logic        BlockDone,         // Current 4x4 block complere.
-              output logic  [4:0] TotalCoeffOut
-              );
-
-
+  input  logic        Clk,          // Clock.
+  input  logic        nReset,       // Async reset.
+  input  logic        Enable,       // External enable.
+  input  logic  [4:0] nC,           // nC from exteranl source.
+  input  logic [15:0] Bitstream,    // Input bitstream data.
+  output logic        RdReq,        // Read from the bistream source.
+  output logic [12:0] LevelOut,     // Decoded level output.
+  output logic        WrReq,        // Write to level buffer/fifo.
+  output logic        BlockDone,    // Current 4x4 block complere.
+  output logic  [4:0] TotalCoeffOut // Decoded total coeff out.
+);
+////////////////////////////////////////////////////////////////////////////////
+// Signal declarations.
+////////////////////////////////////////////////////////////////////////////////
 logic [15:0]                      BitstreamShifted;
 logic [4:0]                       TotalCoeff;
 logic [1:0]                       TrailingOnes;
@@ -28,10 +34,11 @@ logic                             ShiftEn_ZeroDecode;
 logic [4:0]                       NumShift_ZeroDecode;
 logic                             ZeroDecodeEnable;
 logic                             ZeroDecodeDone;
-
-
+////////////////////////////////////////////////////////////////////////////////
+// Total coeff output.
 assign TotalCoeffOut = TotalCoeff;
-
+////////////////////////////////////////////////////////////////////////////////
+// Coeff Token decode instance.
 CoeffTokenDecode uCoeffTokenDecode (
    .Clk             (Clk),
    .nReset          (nReset),
@@ -42,7 +49,8 @@ CoeffTokenDecode uCoeffTokenDecode (
    .TrailingOnes    (TrailingOnes),
    .NumShift        (NumShift_CoeffTokenDecode)                                
 );
-
+////////////////////////////////////////////////////////////////////////////////
+// Barrel Shifter instance.
 BarrelShifter uBarrelShifter (
  .Clk                (Clk),
  .nReset             (nReset),
@@ -54,7 +62,8 @@ BarrelShifter uBarrelShifter (
  .BitstreamShifted   (BitstreamShifted),
  .BarrelShifterReady (BarrelShifterReady)
 );
-
+////////////////////////////////////////////////////////////////////////////////
+// Control state machine instance.
 CTRLFSM uCTRLFSM (
   .Clk                      (Clk),              
   .nReset                   (nReset),           
@@ -75,7 +84,8 @@ CTRLFSM uCTRLFSM (
   .ZeroDecodeDone           (ZeroDecodeDone),
   .BlockDone                (BlockDone)
 );
-
+////////////////////////////////////////////////////////////////////////////////
+// Level decode instance.
 LevelDecode uLevelDecode (
   .Clk                      (Clk),
   .nReset                   (nReset),
@@ -89,7 +99,8 @@ LevelDecode uLevelDecode (
   .WrReq                    (WrReq),
   .Done                     (LevelDecodeDone)
 );
-
+////////////////////////////////////////////////////////////////////////////////
+// Zero Decode instance.
 ZeroDecode uZeroDecode (
   .Clk             (Clk),
   .nReset          (nReset),
@@ -100,5 +111,5 @@ ZeroDecode uZeroDecode (
   .ShiftEn         (ShiftEn_ZeroDecode),
   .Done            (ZeroDecodeDone)
 );
-
+////////////////////////////////////////////////////////////////////////////////
 endmodule

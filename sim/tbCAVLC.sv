@@ -33,7 +33,6 @@ always #(`CLK_PERIOD/2) Clk = ~Clk;
 // CAVLC Interface.
 CAVLCIntfc CAVLCIntfc(Clk);
 
-
 // DUT instance.
 CAVLC uCAVLC (
               .Clk          (Clk),                         // Clock.
@@ -51,14 +50,12 @@ CAVLC uCAVLC (
 // launch the test
 basic_test test(CAVLCIntfc);
 
-
 endmodule
 
 program basic_test(CAVLCIntfc CAVLCIntfc);
 
 BitStreamGenerator b1;
 nCGenerator n1;
-
 
 initial begin
   b1 = new(CAVLCIntfc);
@@ -74,13 +71,10 @@ initial begin
   b1.RunLevelCheck();
   n1.Run();
   
-  
   wait (b1.BlockCnt==`SIM_BLOCKS);
   $stop;
   
 end
-
-
 
 endprogram
 

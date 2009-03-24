@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //  File : BarrelShifter.sv
 //  Author : Andrew Bettino (abettino@gmail.com)         
-//  Desc : BarrelShifter. Maintains a FIFO and can continusouly shit any number
+//  Desc : BarrelShifter. Maintains a FIFO and can continusouly shift any number
 //   of bits (0-16) on a given clock cycle.
 //         
 //         
