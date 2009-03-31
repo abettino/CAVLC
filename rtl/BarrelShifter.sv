@@ -62,6 +62,7 @@ assign ReadFIFO = ShiftCond | BarrelShiftEnPulse | |BarrelShiftEnDel;
 FIFO uFIFO(
   .Clk       (Clk),
   .nReset    (nReset),
+  .Enable    (Enable),
   .DataReady (RdReqDel),
   .DataIn    (Bitstream),
   .ReadFIFO  (ReadFIFO),

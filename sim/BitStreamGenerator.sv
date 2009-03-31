@@ -16,7 +16,7 @@ logic [3:0] UpperCoeffBlock[0:3];
 logic [3:0] LeftCoeffBlock[0:3];
   
 logic [3:0] AllCoeffs[(`HBLOCKS/4)*(`VBLOCKS/4)];
-  
+
 
 int         TotalCoeffMatrix[`HRES/4][`VRES/4];
   
@@ -50,7 +50,7 @@ virtual     task Init();
     LeftCoeffBlock[i] = 4'bx;
     UpperCoeffBlock[i] = 4'bx;
   end
-
+  
 
 endtask
 
@@ -139,8 +139,12 @@ virtual task Run();
       end
       else begin
         if (CAVLCIntfc.BlockDone) begin
-          if (TotalBlockCnt == 17) TotalBlockCnt=0;
-          else TotalBlockCnt++;
+          if (TotalBlockCnt == 17) begin 
+            TotalBlockCnt=0;
+          end
+          else begin 
+            TotalBlockCnt++;
+          end
         end
       end
     end
@@ -157,10 +161,15 @@ int          Levels[16][`NUM_BLOCKS];
 int          LevelSim[16];
 int          BlockCnt;
 int          LevelCnt;
+int          NumBlocks;
   
 int          NumWords;
 int          StreamOffset;  
 int          error_cnt;
+int          BitStreamDone;
+  
+logic [4:0]  nCArray[`BIT_STREAM_MEM_SIZE];
+  
 
   function new(virtual CAVLCIntfc a);
     CAVLCIntfc = a;
@@ -170,6 +179,15 @@ virtual task Init();
   CAVLCIntfc.nReset <= '0;
   CAVLCIntfc.Bitstream <= '0;
   CAVLCIntfc.Enable <= '0;
+  LevelCnt = 0;
+  BlockCnt = 0;
+  error_cnt = 0;                   
+for(int i=0;i<16;i++) LevelSim[i] = 0;
+endtask
+
+virtual task ResetValues();
+  LevelCnt=0;
+  BlockCnt=0;
   
 endtask
 
@@ -182,13 +200,11 @@ virtual task OutOfReset();
 endtask
 
 virtual task RunLevelCheck();
-  for(int i=0;i<16;i++) LevelSim[i] = 0;
-  LevelCnt = 0;
-  BlockCnt = 0;
-  error_cnt = 0;                // 
-  fork
-    while (1) begin
-    @(CAVLCIntfc.cb);
+  
+
+//  fork
+//    while (1) begin
+//    @(CAVLCIntfc.cb);
     if (CAVLCIntfc.WrReq) begin
       LevelSim[LevelCnt] = {{19{CAVLCIntfc.LevelOut[12]}},CAVLCIntfc.LevelOut};
       LevelCnt++;
@@ -212,25 +228,50 @@ virtual task RunLevelCheck();
       LevelCnt = 0;
       BlockCnt++;
     end
-    end
-  join_none
+//    end
+//  join_none
 endtask
 
 virtual task Run();
 int  count;
+int  block_cnt;
 
   count = 0;
+  block_cnt = 0;
+  BitStreamDone = 0;
+
+  CAVLCIntfc.nC <= nCArray[0];
   
-  fork
+  CAVLCIntfc.Enable <= '1;
+  $display("Run top!\n");
+  
+//  fork
     while (1) begin
       @(CAVLCIntfc.cb);
+      RunLevelCheck();
       CAVLCIntfc.Bitstream <= BitStreamMem[count];
       if (CAVLCIntfc.RdReq) begin
         count++;
       end
+      if (CAVLCIntfc.BlockDone) begin
+        block_cnt++;
+        CAVLCIntfc.nC <= nCArray[block_cnt];
+        $display("block_cnt: %d NumBlocks: %d nC: %d",block_cnt,NumBlocks,nCArray[block_cnt]);
+        if (block_cnt == NumBlocks-1) begin
+          repeat (3) @(CAVLCIntfc.cb);
+          CAVLCIntfc.Enable <= '0;        
+        end
+      end
+      if (block_cnt == NumBlocks) begin 
+        BitStreamDone = 1;
+        break;
+      end
       
     end
-  join_none
+//  join_none
+
+
+  
 endtask
 
 virtual function LoadBitstream(input string filename);
@@ -241,6 +282,9 @@ logic [15:0] NextWord;
 
 logic [15:0] Mask;
   
+  // clear mem.
+  for (i=0;i<`BIT_STREAM_MEM_SIZE;i++) BitStreamMem[i] = 32'bx;
+
   $readmemh(filename,BitStreamMem);
 
   // find the size. isn't there a better way for this? readmem should return size or something
@@ -295,20 +339,24 @@ int     file, cnt;
   $display("LoadLevels: Loading levels from file %s",filename);
   if (file)  begin
   while (!$feof(file)) begin
-    $fscanf(file,"%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
-            Levels[0][cnt],Levels[1][cnt],Levels[2][cnt],Levels[3][cnt],
+    $fscanf(file,"%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+            nCArray[cnt],Levels[0][cnt],Levels[1][cnt],Levels[2][cnt],Levels[3][cnt],
             Levels[4][cnt],Levels[5][cnt],Levels[6][cnt],Levels[7][cnt],
             Levels[8][cnt],Levels[9][cnt],Levels[10][cnt],Levels[11][cnt],
             Levels[12][cnt],Levels[13][cnt],Levels[14][cnt],Levels[15][cnt],
             Levels[16][cnt]);
     cnt++;
     if (cnt == `NUM_BLOCKS) break;
-
+    
   end
   end
   else begin
     $display("Error loading file %s",filename);
   end
+  
+  NumBlocks = cnt;
+  $fclose(file);
+  
 endfunction
 
 virtual function DisplayStream(int num);
@@ -323,6 +371,14 @@ virtual function DisplayLevels(int num);
       $write("%d ",Levels[j][i]);
     end
     $display("");
+  end
+
+endfunction
+
+virtual function DisplaynC(int num);
+  $display("DisplaynC");
+  for(int i=0;i<num;i++) begin
+    $display("%d",nCArray[i]);
   end
 
 endfunction

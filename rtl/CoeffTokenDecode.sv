@@ -71,12 +71,12 @@ always_comb begin
       TrailingOnesInt = TrailingOnes8;
       NumShift = NumShift8;
     end
-    'b11111 : begin
+    'b11110 : begin
       TotalCoeffInt = TotalCoeffNeg1;
       TrailingOnesInt = TrailingOnesNeg1;
       NumShift = NumShiftNeg1;
     end
-    'b11110 : begin
+    'b11111 : begin
       TotalCoeffInt = TotalCoeffNeg2;
       TrailingOnesInt = TrailingOnesNeg2;
       NumShift = NumShiftNeg2;

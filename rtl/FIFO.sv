@@ -4,6 +4,7 @@ module FIFO (
   input logic DataReady,
   input logic [15:0] DataIn,
   input logic ReadFIFO,
+  input logic Enable,          // Sync enable.
   output logic [15:0] DataOut,
   output logic Full,
   output logic AlmostFull,           
@@ -64,8 +65,14 @@ always_ff @(posedge Clk or negedge nReset)
       Underflow <= 1'b0;
     end
     else begin
-      Overflow <= (Full & DataReady);
-      Underflow <= (Empty & ReadFIFO);
+      if (!Enable) begin
+        Overflow <= 1'b0;
+        Underflow <= 1'b0;
+      end
+      else begin
+        Overflow <= (Full & DataReady);
+        Underflow <= (Empty & ReadFIFO);
+      end
     end
   end
       
@@ -75,8 +82,13 @@ always @(posedge Clk or negedge nReset)
     if (!nReset) begin
       WriteCnt <= 3'b000;
     end else begin
-      if (DataReady & !Full) begin
-        WriteCnt <= WriteCnt + 3'b1;
+      if (!Enable) begin
+        WriteCnt <= 3'b000;
+      end
+      else begin
+        if (DataReady & !Full) begin
+          WriteCnt <= WriteCnt + 3'b1;
+        end
       end
     end
   end
@@ -89,9 +101,14 @@ always @(posedge Clk or negedge nReset)
       ReadCnt <= 3'b000;
     end 
     else begin
-      if (ReadFIFO & !Empty) begin
-//        ReadCnt <= ReadCnt + 3'b1;
-        ReadCnt <= ReadCntComb;
+      if (!Enable) begin
+        ReadCnt <= '0;
+      end
+      else begin
+        if (ReadFIFO & !Empty) begin
+          //        ReadCnt <= ReadCnt + 3'b1;
+          ReadCnt <= ReadCntComb;
+        end
       end
     end
   end
@@ -105,8 +122,13 @@ always_ff @(posedge Clk or negedge nReset)
       NumWords <= 3'b000;
     end
     else begin
-      if (DecNumWords & !IncNumWords)      NumWords <= NumWords - 3'b1;
-      else if (IncNumWords & !DecNumWords) NumWords <= NumWords + 3'b1;
+      if (!Enable) begin
+        NumWords <= 3'b000;
+      end
+      else begin
+        if (DecNumWords & !IncNumWords)      NumWords <= NumWords - 3'b1;
+        else if (IncNumWords & !DecNumWords) NumWords <= NumWords + 3'b1;
+      end
     end 
   end 
 

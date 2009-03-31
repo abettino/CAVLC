@@ -21,6 +21,7 @@ modport TB (clocking cb);
 
 modport DUT (output      LevelOut,RdReq,WrReq,BlockDone,TotalCoeffOut,
              input       nReset,Bitstream, Enable,nC);
+  
 
 endinterface
 
@@ -59,19 +60,20 @@ nCGenerator n1;
 
 initial begin
   b1 = new(CAVLCIntfc);
-  n1 = new(CAVLCIntfc);
-  n1.Init();
   b1.Init();
   b1.OutOfReset();
-  b1.LoadBitstream("../stim/bistream0.dat");
-  b1.DisplayStream(30);
-  b1.LoadLevels("../stim/levels0.dat");
-  b1.DisplayLevels(10);
-  b1.Run();
-  b1.RunLevelCheck();
-  n1.Run();
+  repeat (2) begin
+    b1.LoadBitstream("../stim/test_data_0/test_data_0_0");
+    b1.DisplayStream(50);
+    b1.LoadLevels("../stim/test_data_0/test_data_0_level_0");
+    b1.DisplayLevels(10);
+    b1.DisplaynC(10);
+    b1.Run();
+    b1.ResetValues();
+    //  b1.RunLevelCheck();
+    wait(b1.BitStreamDone==1);
+  end
   
-  wait (b1.BlockCnt==`SIM_BLOCKS);
   $stop;
   
 end
