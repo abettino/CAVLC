@@ -34,6 +34,7 @@ logic [1:0]                      TrailingOnesLeft;
 logic                            TrailingOneMode;
 logic                            OneCoeffDone;
 
+logic                            Level2Thresh,Level3Thresh;
 
 // External Done signal.
 assign Done = (TotalCoeff > 1) ? (CoeffCount == (TotalCoeff-1)) && !StallPipeLine : DoneInt;
@@ -55,23 +56,31 @@ always_ff @(posedge Clk or negedge nReset)
 //      4                     24
 //      5                     48
 //      6                     n/a
+assign Level2Thresh = (OnePos == 2 && ExtraBit[4]) || OnePos > 2;
+assign Level3Thresh = (OnePos == 2 && ExtraBit[4:3]) || OnePos > 2;
+
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin
     SuffixLength <= '0;
   end
   else begin
     if (Enable & TrailingOnesLeft==0) begin
-      case (SuffixLength)
-        0 : SuffixLength <= 3'd1;
-        1 : if (OnePos > 2) SuffixLength <= 3'd2;
-        2 :  SuffixLength <= 3'd2;
-//        3 : if () SuffixLength <= 3'd4;
-//        4 : if (CodeNum >= 24) SuffixLength <= 3'd5;
-//        5 : if (CodeNum >= 48) SuffixLength <= 3'd6;
-      endcase
+      if (!StallPipeLine) begin
+        case (SuffixLength)
+          0 : if (OnePos > 5 || (OnePos > 3 && TrailingOnes < 3)) SuffixLength <= 3'd2;
+              else SuffixLength <= 3'd1;
+          1 : if (OnePos > 2) SuffixLength <= 3'd2;
+          2 : if (Level2Thresh)  SuffixLength <= 3'd3;
+          3 : if (Level3Thresh)  SuffixLength <= 3'd4;
+          4 :  SuffixLength <= 4'd4;
+          //        4 : if (CodeNum >= 24) SuffixLength <= 3'd5;
+          //        5 : if (CodeNum >= 48) SuffixLength <= 3'd6;
+        endcase
+      end
     end
     else begin
-      SuffixLength <= '0;
+      if (TotalCoeff > 10 && TrailingOnes < 3)  SuffixLength <= 1;
+      else SuffixLength <= '0;
     end
   end
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +93,7 @@ OneFinder uOneFinder (
 // Condition to stall the pipeline when the prefix length
 // gets very large.
 always_comb begin 
+/*
   case(SuffixLength)
     0 : begin
       StallPipeLine = '0;      
@@ -99,6 +109,9 @@ always_comb begin
       StallPipeLine = '0;
     end
   endcase
+ */
+   if (OnePos == 'hE || OnePos == 'hF) StallPipeLine = '1;
+   else StallPipeLine = '0;
 end
 // Calculate the code number based on current suffix length
 // and the one position.
@@ -133,27 +146,43 @@ always_ff @(posedge Clk or negedge nReset)
         LPUTrig <= '1;
       end
       else begin
-      case (SuffixLength)
-        0 : begin
-          if (OnePos <= 13) CodeNum <= OnePos;
-          else if (OnePos > 13 && OnePos <= 29) CodeNum <= 14+BitstreamShifted[16:13];
-          LPUTrig <= !StallPipeLine;
-        end
-        1 : begin
-          CodeNum <= {OnePos,1'b0}+ExtraBit[4];
-          LPUTrig <= !StallPipeLine;
-        end
-        2 : begin
-          if (!Stalled) CodeNum <= {OnePos,2'b0}+ExtraBit[4:3];
-          else if (PrevOnePos=='hE) CodeNum <= 'd56+BitstreamShifted[15:14];
-          else if (PrevOnePos=='hF) CodeNum <= 'd60+BitstreamShifted[15:4];
-          
-          LPUTrig <= !StallPipeLine;
-        end
-        default : begin
-          LPUTrig <= '0;
-        end
-      endcase
+        case (SuffixLength)
+          0 : begin
+            if (OnePos <= 13) CodeNum <= OnePos;
+            else if (OnePos > 13 && OnePos <= 29) CodeNum <= 14+BitstreamShifted[16:13];
+            LPUTrig <= !StallPipeLine;
+          end
+          1 : begin
+            if (!Stalled) CodeNum <= {OnePos,1'b0}+ExtraBit[4];
+            else if (PrevOnePos=='hE) CodeNum <= 'd28+BitstreamShifted[15];
+            else if (PrevOnePos=='hF) CodeNum <= 'd30+BitstreamShifted[15:4];
+            LPUTrig <= !StallPipeLine;
+          end
+          2 : begin
+            if (!Stalled) CodeNum <= {OnePos,2'b0}+ExtraBit[4:3];
+            else if (PrevOnePos=='hE) CodeNum <= 'd56+BitstreamShifted[15:14];
+            else if (PrevOnePos=='hF) CodeNum <= 'd60+BitstreamShifted[15:4];
+            LPUTrig <= !StallPipeLine;
+          end
+          3 : begin
+            if (!Stalled) begin 
+              CodeNum <= {OnePos,3'b0}+ExtraBit[4:2];
+              $stop;
+              
+            end
+            else if (PrevOnePos=='hE) CodeNum <= 'd112+BitstreamShifted[15:13];
+            else if (PrevOnePos=='hF) CodeNum <= 'd120+BitstreamShifted[15:4];
+            LPUTrig <= !StallPipeLine;
+          end
+          4 : begin
+            if (!Stalled) CodeNum <= {OnePos,4'b0} + ExtraBit[4:1];
+            else if (PrevOnePos=='hE) CodeNum <= 'd224+BitstreamShifted[15:12];
+            else if (PrevOnePos=='hF) CodeNum <= 'd120+BitstreamShifted[15:4];
+          end
+          default : begin
+            LPUTrig <= '0;
+          end
+        endcase
       end
     end
     else begin
@@ -170,29 +199,51 @@ always_comb begin
       ShiftEn = '1;
     end
     else begin
-      case (SuffixLength)
-        0 : begin 
-          NumShift = OnePos + 1;
-          ShiftEn = '1;
+      if (StallPipeLine) begin
+        NumShift = OnePos + 1;
+      end
+      else if (Stalled) begin
+        if (PrevOnePos=='hE) begin
+          NumShift=SuffixLength;
         end
-        1 : begin
-          NumShift = OnePos + 2;
-          ShiftEn = '1;
+        else begin
+          NumShift = 'd12;
         end
-        2 : begin
-          case ({StallPipeLine,Stalled})
-            2'b00 : NumShift = OnePos + 3;
-            2'b10 : NumShift = OnePos + 1;
-            2'b11 : NumShift = OnePos + 1;
-            2'b01 : NumShift = (PrevOnePos=='hE) ? 'd2 : 'd12;
-          endcase
-          ShiftEn = '1;
-        end
-        default : begin
-          NumShift = '0;
-          ShiftEn = '0;
-        end
-      endcase
+      end
+      else begin
+        case (SuffixLength)
+          0 : begin 
+            NumShift = OnePos + 1;
+            ShiftEn = '1;
+          end
+          1 : begin
+            NumShift = OnePos + 2;
+            ShiftEn = '1;
+          end
+          2 : begin
+//            case ({StallPipeLine,Stalled})
+//              2'b00 : NumShift = OnePos + 3;
+//              2'b10 : NumShift = OnePos + 1;
+//              2'b11 : NumShift = OnePos + 1;
+//              2'b01 : NumShift = (PrevOnePos=='hE) ? 'd2 : 'd12;
+//            endcase
+            NumShift = OnePos + 3;
+            ShiftEn = '1;
+          end
+          3 : begin
+            NumShift = OnePos + 4;
+            ShiftEn = '1;
+          end
+          4 : begin
+            NumShift = OnePos + 5;
+            ShiftEn = '1;
+          end
+          default : begin
+            NumShift = '0;
+            ShiftEn = '0;
+          end
+        endcase
+      end
     end
   end
   else begin
@@ -206,6 +257,7 @@ LevelProcessingUnit uLevelProcessingUnit (
   .Clk          (Clk), 
   .nReset       (nReset), 
   .TrailingOnes (TrailingOnes),
+  .TotalCoeff   (TotalCoeff),
   .TrailingOneMode (TrailingOneMode),
   .SuffixLength (SuffixLengthLPU),
   .LPUTrig      (LPUTrig),

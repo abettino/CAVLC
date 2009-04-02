@@ -195,7 +195,7 @@ virtual task OutOfReset();
   repeat (100) @(CAVLCIntfc.cb);
   CAVLCIntfc.nReset <=  1'b1;
   repeat (10) @(CAVLCIntfc.cb);
-  CAVLCIntfc.Enable <=  1'b1;
+//  CAVLCIntfc.Enable <=  1'b1;
   repeat (1) @(CAVLCIntfc.cb);
 endtask
 
@@ -212,7 +212,7 @@ virtual task RunLevelCheck();
     if (CAVLCIntfc.BlockDone) begin
       for(int i=0;i<CAVLCIntfc.TotalCoeffOut;i++) begin
         if (LevelSim[i] !== Levels[i][BlockCnt]) begin
-          $display("LEVEL CHECK ERROR: Block=%d, Got=%d, Expected=%d at time=%d",BlockCnt,LevelSim[i],Levels[i][BlockCnt],$time);
+          $display("LEVEL CHECK ERROR: Block=%d, i=%d,Got=%d, Expected=%d at time=%d",BlockCnt,i,LevelSim[i],Levels[i][BlockCnt],$time);
           error_cnt++;
           $stop;
         end
@@ -241,15 +241,20 @@ int  block_cnt;
   BitStreamDone = 0;
 
   CAVLCIntfc.nC <= nCArray[0];
+  CAVLCIntfc.Bitstream <= BitStreamMem[0];
+  
+  repeat (10) @(CAVLCIntfc.cb);
   
   CAVLCIntfc.Enable <= '1;
   $display("Run top!\n");
+
+  
   
 //  fork
     while (1) begin
       @(CAVLCIntfc.cb);
-      RunLevelCheck();
       CAVLCIntfc.Bitstream <= BitStreamMem[count];
+      RunLevelCheck();
       if (CAVLCIntfc.RdReq) begin
         count++;
       end
@@ -298,10 +303,10 @@ logic [15:0] Mask;
   
   // display for 20 words
 
-  $display("Bit Stream Mem");
+//  $display("Bit Stream Mem");
   
-  for(i=0;i<30;i++) $display("%x ",BitStreamMem[i]);
-  $display("\n");
+//  for(i=0;i<30;i++) $display("%x ",BitStreamMem[i]);
+//  $display("\n");
   
   for(i=1;i<NumWords-1;i++) begin
     Mask = '1;
@@ -321,6 +326,7 @@ logic [15:0] Mask;
   end
 
   
+/*
   $display("Long Bit Stream Shifted Version");
     LongStream = LongStream << StreamOffset;
   for(i=0;i<30;i++) begin 
@@ -329,7 +335,7 @@ logic [15:0] Mask;
     else    $display("%x %x bad",CurrentWord,BitStreamMem[i]);
     LongStream = LongStream << 16;
   end
-
+*/
 endfunction
 
 virtual function LoadLevels(input string filename);

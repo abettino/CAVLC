@@ -30,6 +30,7 @@ module tbCAVLC;
 // Clock generation.
 bit        Clk;
 always #(`CLK_PERIOD/2) Clk = ~Clk;
+bit [15:0] DataReg;
 
 // CAVLC Interface.
 CAVLCIntfc CAVLCIntfc(Clk);
@@ -51,6 +52,7 @@ CAVLC uCAVLC (
 // launch the test
 basic_test test(CAVLCIntfc);
 
+
 endmodule
 
 program basic_test(CAVLCIntfc CAVLCIntfc);
@@ -62,18 +64,39 @@ initial begin
   b1 = new(CAVLCIntfc);
   b1.Init();
   b1.OutOfReset();
-  repeat (2) begin
-    b1.LoadBitstream("../stim/test_data_0/test_data_0_0");
-    b1.DisplayStream(50);
-    b1.LoadLevels("../stim/test_data_0/test_data_0_level_0");
-    b1.DisplayLevels(10);
-    b1.DisplaynC(10);
-    b1.Run();
-    b1.ResetValues();
-    //  b1.RunLevelCheck();
-    wait(b1.BitStreamDone==1);
-  end
-  
+
+  $display("*************");
+  $display("MB 1");
+  $display("*************");
+  b1.LoadBitstream("../stim/test_data_0/test_data_0_0");
+//  b1.DisplayStream(50);
+  b1.LoadLevels("../stim/test_data_0/test_data_0_level_0");
+//  b1.DisplayLevels(10);
+//  b1.DisplaynC(10);
+  b1.Run();
+  b1.ResetValues();
+  wait(b1.BitStreamDone==1);
+
+  $display("*************");
+  $display("MB 2");
+  $display("*************");
+  b1.LoadBitstream("../stim/test_data_0/test_data_0_1");
+  b1.LoadLevels("../stim/test_data_0/test_data_0_level_1");
+  b1.Run();
+  b1.ResetValues();
+  wait(b1.BitStreamDone==1);
+
+
+  $display("*************");
+  $display("MB 3");
+  $display("*************");
+  b1.LoadBitstream("../stim/test_data_0/test_data_0_2");
+  b1.LoadLevels("../stim/test_data_0/test_data_0_level_2");
+  b1.Run();
+  b1.ResetValues();
+  wait(b1.BitStreamDone==1);
+
+
   $stop;
   
 end

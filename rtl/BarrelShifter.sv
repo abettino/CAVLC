@@ -63,7 +63,8 @@ FIFO uFIFO(
   .Clk       (Clk),
   .nReset    (nReset),
   .Enable    (Enable),
-  .DataReady (RdReqDel),
+//  .DataReady (RdReqDel),
+  .DataReady (RdReq),
   .DataIn    (Bitstream),
   .ReadFIFO  (ReadFIFO),
   .DataOut   (DataOutFIFO),
@@ -78,7 +79,7 @@ FIFO uFIFO(
 // combinational control signals.
 assign BitPtrOverRun = (BitPtr+NumShift>=16);
 assign ShiftCond     = BitPtrOverRun & ShiftEn;
-assign BitPtrComb    = BitPtr+NumShift;
+assign BitPtrComb    = ShiftEn ? BitPtr+NumShift : BitPtr;
 
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin 
@@ -87,16 +88,23 @@ always_ff @(posedge Clk or negedge nReset)
     BitstreamShifted <= '0;
   end
   else begin
-    // Bit pointer register.
-    if      (ShiftEn & BitPtrOverRun) BitPtr <= (BitPtr+NumShift-5'd16);
-    else if (ShiftEn) BitPtr <= BitPtrComb;
-    // Current Data Loading.
-    if      (BarrelShiftEnPulse)   CurrentData[47:32] <= DataOutFIFO;
-    else if (BarrelShiftEnDel[0])  CurrentData[31:16] <= DataOutFIFO;
-    else if (BarrelShiftEnDel[1])  CurrentData[15:0]  <= DataOutFIFO;
-    else if (ShiftCond)            CurrentData        <= {CurrentData[31:0],DataOutFIFO};
-    // output control.
-    BitstreamShifted <= BitstreamShiftedInt;
+    if (!Enable) begin
+      BitPtr <= '0;
+      CurrentData <= '0;
+      BitstreamShifted <= '0;
+    end
+    else begin
+      // Bit pointer register.
+      if      (ShiftEn & BitPtrOverRun) BitPtr <= (BitPtr+NumShift-5'd16);
+      else if (ShiftEn) BitPtr <= BitPtrComb;
+      // Current Data Loading.
+      if      (BarrelShiftEnPulse)   CurrentData[47:32] <= DataOutFIFO;
+      else if (BarrelShiftEnDel[0])  CurrentData[31:16] <= DataOutFIFO;
+      else if (BarrelShiftEnDel[1])  CurrentData[15:0]  <= DataOutFIFO;
+      else if (ShiftCond)            CurrentData        <= {CurrentData[31:0],DataOutFIFO};
+      // output control.
+      BitstreamShifted <= BitstreamShiftedInt;
+    end
   end
 // "Barrel" shifting mux.
 always_comb begin

@@ -39,7 +39,7 @@ always_comb begin
     IDLE : if (Enable && TotalCoeff >= 1) NextState = TOTAL_ZERO;
     else NextState = IDLE;
     TOTAL_ZERO : NextState = ZERO_RUN;
-    ZERO_RUN : if (ZeroesLeft == 0) NextState = WAIT;
+    ZERO_RUN : if (ZeroesLeft == 0 || CoeffCnt==TotalCoeff) NextState = WAIT;
     else NextState = ZERO_RUN;
     WAIT : if (!Enable) NextState = IDLE;
     else NextState = WAIT;
@@ -112,7 +112,7 @@ always_ff @(posedge Clk or negedge nReset)
     Done <= '0;
   end
   else begin
-    if ((Enable && TotalCoeff <= 1) || (CurrentState == ZERO_RUN && ZeroesLeft==0)) Done <= 1'b1;
+    if ((Enable && TotalCoeff <= 1) || (CurrentState == ZERO_RUN && ZeroesLeft==0) || (CurrentState==ZERO_RUN && CoeffCnt==TotalCoeff)) Done <= 1'b1;
     else Done <= 1'b0;
   end
 endmodule

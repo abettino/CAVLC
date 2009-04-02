@@ -56,12 +56,12 @@ always_comb begin
       TrailingOnesInt = TrailingOnes02;
       NumShift = NumShift02;
     end
-    2,3,4 : begin
+    2,3 : begin
       TotalCoeffInt = TotalCoeff24;
       TrailingOnesInt = TrailingOnes24;
       NumShift = NumShift24;
     end
-    5,6,7 : begin
+    4,5,6,7 : begin
       TotalCoeffInt = TotalCoeff48;
       TrailingOnesInt = TrailingOnes48;
       NumShift = NumShift48;

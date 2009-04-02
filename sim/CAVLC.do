@@ -55,4 +55,6 @@ add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/nC}
 add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/BlockDone}
 add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/TotalCoeffOut}
 
+add wave -group {test} -radix 16 {tbCAVLC/test/CAVLCIntfc/*}
+
 run -all

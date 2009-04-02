@@ -7,6 +7,7 @@ module LevelProcessingUnit (
   input  logic        Clk,            // Clock.
   input  logic        nReset,         // Async reset.                           
   input  logic  [1:0] TrailingOnes,   // Number of trailing ones.
+  input  logic  [4:0] TotalCoeff,       // From CoeffTokenDecode.
   input  logic        TrailingOneMode,// Indicates trailine one proc.
   input  logic        LPUTrig,        // LPU trigger.
   input  logic  [2:0] SuffixLength,
@@ -18,11 +19,14 @@ module LevelProcessingUnit (
 ////////////////////////////////////////////////////////////////////////////////
 logic [13:0]                                    MidCalc;
 logic [13:0]                                    CodeNumInt;
+logic                                           T1Prev; // Prev in T1 mode.
+
 // Divide level out by 2.
 assign LevelOut = MidCalc[13:1];
 // Special case.
 always_comb begin
   if (SuffixLength == 0 && TrailingOnes<3) CodeNumInt = CodeNum + 2;
+  else if (T1Prev && SuffixLength == 1 && TrailingOnes<3 && TotalCoeff > 10) CodeNumInt = CodeNum + 2;
   else CodeNumInt = CodeNum;
 end
 // Sync. output logic.
@@ -44,4 +48,9 @@ always_ff @(posedge Clk or negedge nReset)
     WrReq <= '0;
   end
 ////////////////////////////////////////////////////////////////////////////////
+
+always_ff @(posedge Clk or negedge nReset)
+  if (!nReset) T1Prev <= '0;
+  else  T1Prev <= TrailingOneMode;
+
 endmodule
