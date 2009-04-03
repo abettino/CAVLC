@@ -56,7 +56,9 @@ always_ff @(posedge Clk or negedge nReset)
 //      4                     24
 //      5                     48
 //      6                     n/a
-assign Level2Thresh = (OnePos == 2 && ExtraBit[4]) || OnePos > 2;
+
+//assign Level2Thresh = (OnePos == 2 && ExtraBit[4]) || OnePos > 2;
+assign Level2Thresh = OnePos > 2;
 assign Level3Thresh = (OnePos == 2 && ExtraBit[4:3]) || OnePos > 2;
 
 always_ff @(posedge Clk or negedge nReset)
@@ -165,11 +167,7 @@ always_ff @(posedge Clk or negedge nReset)
             LPUTrig <= !StallPipeLine;
           end
           3 : begin
-            if (!Stalled) begin 
-              CodeNum <= {OnePos,3'b0}+ExtraBit[4:2];
-              $stop;
-              
-            end
+            if (!Stalled)             CodeNum <= {OnePos,3'b0}+ExtraBit[4:2];
             else if (PrevOnePos=='hE) CodeNum <= 'd112+BitstreamShifted[15:13];
             else if (PrevOnePos=='hF) CodeNum <= 'd120+BitstreamShifted[15:4];
             LPUTrig <= !StallPipeLine;
