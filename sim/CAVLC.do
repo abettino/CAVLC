@@ -22,6 +22,7 @@ vlog -work work  ../rtl/CoeffTokenDecode.sv \
 ../rtl/ZeroDecode.sv \
 ../rtl/TotalZeroTable_1.v \
 ../rtl/RunBeforeTable.v \
+../rtl/TotalZeroTableDCChroma.v \
 ../rtl/CAVLC.sv
 
 
@@ -55,6 +56,6 @@ add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/nC}
 add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/BlockDone}
 add wave -group {Top out} -radix 10 {tbCAVLC/uCAVLC/TotalCoeffOut}
 
-add wave -group {test} -radix 16 {tbCAVLC/test/CAVLCIntfc/*}
+#add wave -group {test} -radix 16 {tbCAVLC/test/CAVLCIntfc/*}
 
 run -all

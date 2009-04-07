@@ -4,12 +4,15 @@ module ZeroDecode (
                    input  logic Enable,
                    input  logic [15:0] BitstreamShifted,
                    input  logic [4:0] TotalCoeff,
+                   input  logic [4:0] nC,
                    output logic [4:0] NumShift,
                    output logic ShiftEn,
                    output logic Done
                    );
 
 
+logic [3:0]                     TotalZeroesDCChroma;  
+logic [3:0]                     NumShiftDCChroma;
 logic [3:0]                     TotalZeroes;  
 logic [3:0]                     NumShiftTotalZero;
 logic [3:0]                     NumShiftRunBefore;
@@ -64,6 +67,14 @@ RunBeforeTable uRunBeforeTable (
                        .NumShift(NumShiftRunBefore)
 );
 
+TotalZeroTableDCChroma uTotalZeroTableDCChroma (
+                        .Bits(BitstreamShifted[15:7]),
+                        .TotalCoeff(TotalCoeff),
+                        .TotalZeroes(TotalZeroesDCChroma),
+                        .NumShift (NumShiftDCChroma)
+                        );
+
+
 
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin
@@ -76,7 +87,7 @@ always_ff @(posedge Clk or negedge nReset)
       CoeffCnt <= '0;
     end
     else if (CurrentState == TOTAL_ZERO) begin 
-      ZeroesLeft <= TotalZeroes;
+      ZeroesLeft <= nC == 'h1E ? TotalZeroesDCChroma : TotalZeroes;
       CoeffCnt <= CoeffCnt + 1;
     end
     else if (CurrentState == ZERO_RUN) begin 
@@ -92,7 +103,7 @@ always_comb begin
       ShiftEn = '0;
     end
     TOTAL_ZERO : begin
-      NumShift = {1'b0,NumShiftTotalZero};
+      NumShift = nC == 'h1E ? {1'b0,NumShiftDCChroma} : {1'b0,NumShiftTotalZero};
       ShiftEn = '1;
     end
     ZERO_RUN : begin

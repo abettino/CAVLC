@@ -21,7 +21,8 @@ module CTRLFSM (
    output logic        CoeffTokenDecodeEnable,   // Control to CoeffTokenDecode.
    output logic        LevelDecodeEnable,        // Control to LevelDecode.
    output logic        ZeroDecodeEnable,         // Control to ZeroDecode.
-   output logic        BlockDone                 // Output status to ext. control.
+   output logic        BlockDone,                // Output status to ext. control.
+   output logic        BarrelShiftEn
 );
 ////////////////////////////////////////////////////////////////////////////////
 // State machine.
@@ -29,6 +30,7 @@ module CTRLFSM (
 // State Encodings
 enum logic [3:0] {
             WAIT_ENABLE,
+            WAIT_B_SHIFTER,          
             COEFF_TOKEN_0,
             COEFF_TOKEN_1,
             LEVEL_DECODE,
@@ -43,8 +45,10 @@ always_ff @(posedge Clk or negedge nReset)
 always_comb begin
   NextState = XX;
   unique case (CurrentState)
-    WAIT_ENABLE   : if (Enable & BarrelShifterReady) NextState = COEFF_TOKEN_0;
+    WAIT_ENABLE   : if (Enable)                      NextState = WAIT_B_SHIFTER;
                     else                             NextState = WAIT_ENABLE;
+    WAIT_B_SHIFTER : if (BarrelShifterReady)         NextState = COEFF_TOKEN_0;
+                     else                            NextState = WAIT_B_SHIFTER;
     COEFF_TOKEN_0 :                                  NextState = COEFF_TOKEN_1;
     COEFF_TOKEN_1 :                                  NextState = LEVEL_DECODE;
     LEVEL_DECODE  : if (LevelDecodeDone)             NextState = ZERO_DECODE;
@@ -90,12 +94,16 @@ always_ff @(posedge Clk or negedge nReset)
     LevelDecodeEnable      <= '0;
     ZeroDecodeEnable       <= '0;
     BlockDone              <= '0;
+    BarrelShiftEn          <= '0;
   end
   else begin
     CoeffTokenDecodeEnable <= (CurrentState==COEFF_TOKEN_0);
     LevelDecodeEnable      <= (CurrentState==LEVEL_DECODE);
     ZeroDecodeEnable       <= (CurrentState==ZERO_DECODE);
     BlockDone              <= ((CurrentState==ZERO_DECODE) && ZeroDecodeDone);
+    if (CurrentState == WAIT_ENABLE) BarrelShiftEn <= '0;
+    else BarrelShiftEn <= '1;
+    
   end
 ////////////////////////////////////////////////////////////////////////////////
 endmodule

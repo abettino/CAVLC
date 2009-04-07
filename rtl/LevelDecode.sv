@@ -34,7 +34,10 @@ logic [1:0]                      TrailingOnesLeft;
 logic                            TrailingOneMode;
 logic                            OneCoeffDone;
 
-logic                            Level2Thresh,Level3Thresh;
+logic                            Level1Thresh,Level2Thresh,Level3Thresh;
+logic                            PrevT1Mode;
+
+logic                            ShiftEnState;
 
 // External Done signal.
 assign Done = (TotalCoeff > 1) ? (CoeffCount == (TotalCoeff-1)) && !StallPipeLine : DoneInt;
@@ -57,21 +60,25 @@ always_ff @(posedge Clk or negedge nReset)
 //      5                     48
 //      6                     n/a
 
+assign Level1Thresh = (OnePos > 2) || (OnePos==2 && PrevT1Mode);
 //assign Level2Thresh = (OnePos == 2 && ExtraBit[4]) || OnePos > 2;
 assign Level2Thresh = OnePos > 2;
-assign Level3Thresh = (OnePos == 2 && ExtraBit[4:3]) || OnePos > 2;
+//assign Level3Thresh = (OnePos == 2 && ExtraBit[4:3]) || OnePos > 2;
+assign Level3Thresh = OnePos > 2;
 
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin
     SuffixLength <= '0;
+    PrevT1Mode <= '0;
   end
   else begin
+    PrevT1Mode <= |TrailingOnesLeft;
     if (Enable & TrailingOnesLeft==0) begin
       if (!StallPipeLine) begin
         case (SuffixLength)
           0 : if (OnePos > 5 || (OnePos > 3 && TrailingOnes < 3)) SuffixLength <= 3'd2;
               else SuffixLength <= 3'd1;
-          1 : if (OnePos > 2) SuffixLength <= 3'd2;
+          1 : if (Level1Thresh) SuffixLength <= 3'd2;
           2 : if (Level2Thresh)  SuffixLength <= 3'd3;
           3 : if (Level3Thresh)  SuffixLength <= 3'd4;
           4 :  SuffixLength <= 4'd4;
@@ -151,7 +158,7 @@ always_ff @(posedge Clk or negedge nReset)
         case (SuffixLength)
           0 : begin
             if (OnePos <= 13) CodeNum <= OnePos;
-            else if (OnePos > 13 && OnePos <= 29) CodeNum <= 14+BitstreamShifted[16:13];
+            else if (OnePos > 13 && OnePos <= 29) CodeNum <= 14+BitstreamShifted[15:13];
             LPUTrig <= !StallPipeLine;
           end
           1 : begin
@@ -190,70 +197,100 @@ always_ff @(posedge Clk or negedge nReset)
   end
 
 // Num shift logic.
+assign ShiftEnState = Enable & !DoneInt;
+
 always_comb begin
-  if (Enable & !DoneInt) begin
-    if (|TrailingOnesLeft) begin
+  case({ShiftEnState,|TrailingOnesLeft,StallPipeLine,Stalled})
+    4'b1100 : begin //trailing ones.
       NumShift = 1;
       ShiftEn = '1;
     end
-    else begin
-      if (StallPipeLine) begin
-        NumShift = OnePos + 1;
-      end
-      else if (Stalled) begin
-        if (PrevOnePos=='hE) begin
-          NumShift=SuffixLength;
-        end
-        else begin
-          NumShift = 'd12;
-        end
-      end
-      else begin
-        case (SuffixLength)
-          0 : begin 
-            NumShift = OnePos + 1;
-            ShiftEn = '1;
-          end
-          1 : begin
-            NumShift = OnePos + 2;
-            ShiftEn = '1;
-          end
-          2 : begin
-//            case ({StallPipeLine,Stalled})
-//              2'b00 : NumShift = OnePos + 3;
-//              2'b10 : NumShift = OnePos + 1;
-//              2'b11 : NumShift = OnePos + 1;
-//              2'b01 : NumShift = (PrevOnePos=='hE) ? 'd2 : 'd12;
-//            endcase
-            NumShift = OnePos + 3;
-            ShiftEn = '1;
-          end
-          3 : begin
-            NumShift = OnePos + 4;
-            ShiftEn = '1;
-          end
-          4 : begin
-            NumShift = OnePos + 5;
-            ShiftEn = '1;
-          end
-          default : begin
-            NumShift = '0;
-            ShiftEn = '0;
-          end
-        endcase
-      end
+    4'b1010 : begin // stall pipeline.
+      NumShift = OnePos + 1;
+      ShiftEn = '1;
     end
-  end
-  else begin
-    NumShift = '0;
-    ShiftEn = '0;
-  end
+    4'b1001 : begin // pipeline stalled.
+      if (PrevOnePos == 'hE) NumShift=SuffixLength;
+      else NumShift = 'd12;
+      ShiftEn = '1;
+    end
+    4'b1000 : begin // standard.
+      NumShift = SuffixLength+OnePos+1;
+      ShiftEn = '1;
+    end
+    default : begin
+      NumShift = '0;
+      ShiftEn = '0;
+    end
+  endcase
 end
+
+
+// always_comb begin
+//   if (Enable & !DoneInt) begin
+//     if (|TrailingOnesLeft) begin
+//       NumShift = 1;
+//       ShiftEn = '1;
+//     end
+//     else begin
+//       if (StallPipeLine) begin
+//         NumShift = OnePos + 1;
+//         ShiftEn = '1;
+//       end
+//       else if (Stalled) begin
+//         if (PrevOnePos=='hE) begin
+//           NumShift=SuffixLength;
+//           ShiftEn = '1;
+//         end
+//         else begin
+//           NumShift = 'd12;
+//           ShiftEn = '1;
+//         end
+//       end
+//       else begin
+//         NumShift = SuffixLength+OnePos+1;
+//         ShiftEn = '1;
+// /*        case (SuffixLength)
+//           0 : begin 
+//             NumShift = OnePos + 1;
+//             ShiftEn = '1;
+//           end
+//           1 : begin
+//             NumShift = OnePos + 2;
+//             ShiftEn = '1;
+//           end
+//           2 : begin
+//             NumShift = OnePos + 3;
+//             ShiftEn = '1;
+//           end
+//           3 : begin
+//             NumShift = OnePos + 4;
+//             ShiftEn = '1;
+//           end
+//           4 : begin
+//             NumShift = OnePos + 5;
+//             ShiftEn = '1;
+//           end
+//           default : begin
+//             NumShift = '0;
+//             ShiftEn = '0;
+//           end
+//       endcase
+// */
+//       end
+//     end
+//   end
+//   else begin
+//     NumShift = '0;
+//     ShiftEn = '0;
+//   end
+// end
 
 // Level Process Unit. Convert CodeNum to LevelOut.
 LevelProcessingUnit uLevelProcessingUnit (
   .Clk          (Clk), 
   .nReset       (nReset), 
+  .Enable       (Enable),                                         
   .TrailingOnes (TrailingOnes),
   .TotalCoeff   (TotalCoeff),
   .TrailingOneMode (TrailingOneMode),

@@ -75,7 +75,7 @@ always @* begin
         NumShift = 9;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;
         
       end
@@ -142,7 +142,7 @@ always @* begin
         NumShift = 6;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;
       end
     end
@@ -204,7 +204,7 @@ always @* begin
         NumShift = 6;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift= 0;            // 
       end
     end
@@ -262,7 +262,7 @@ always @* begin
         NumShift = 5;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;
       end
     end
@@ -316,7 +316,7 @@ always @* begin
         NumShift = 5;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;           // 
       end
     end
@@ -366,7 +366,7 @@ always @* begin
         NumShift = 6;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;
       end
     end
@@ -412,7 +412,7 @@ always @* begin
         NumShift = 6;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;           // 
       end
     end
@@ -454,7 +454,7 @@ always @* begin
         NumShift = 6;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;           // 
       end
     end
@@ -492,7 +492,7 @@ always @* begin
         NumShift = 5;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;           // 
       end
     end
@@ -526,7 +526,7 @@ always @* begin
         NumShift = 4;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;           // 
       end
     end
@@ -555,7 +555,10 @@ always @* begin
         TotalZeroes = 5;
         NumShift = 3;           // 
       end
-      else TotalZeroes = '0;
+      else begin 
+        TotalZeroes = 0;
+        NumShift = 0;
+      end
     end
     4'hC : begin
       if      (Bits[8:5]=='b0000    )     begin
@@ -572,14 +575,14 @@ always @* begin
       end
       else if (Bits[8]  =='b1       )     begin
         TotalZeroes = 3;
-        NumShift = 2;           // 
+        NumShift = 1;           // 
       end
       else if (Bits[8:6]=='b001     )     begin
         TotalZeroes = 4;
         NumShift = 3;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;           // 
       end
     end
@@ -601,7 +604,7 @@ always @* begin
         NumShift = 2;           // 
       end
       else begin
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;
       end
     end
@@ -619,7 +622,7 @@ always @* begin
         NumShift = 1;           // 
       end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;           // 
       end
     end
@@ -633,7 +636,7 @@ always @* begin
         NumShift = 1;           // 
         end
       else begin 
-        TotalZeroes = '0;
+        TotalZeroes = 0;
         NumShift = 0;
       end
     end

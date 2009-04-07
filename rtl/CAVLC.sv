@@ -34,6 +34,7 @@ logic                             ShiftEn_ZeroDecode;
 logic [4:0]                       NumShift_ZeroDecode;
 logic                             ZeroDecodeEnable;
 logic                             ZeroDecodeDone;
+logic                             BarrelShiftEn;
 ////////////////////////////////////////////////////////////////////////////////
 // Total coeff output.
 assign TotalCoeffOut = TotalCoeff;
@@ -55,7 +56,7 @@ BarrelShifter uBarrelShifter (
  .Clk                (Clk),
  .nReset             (nReset),
  .Bitstream          (Bitstream),
- .Enable             (Enable),
+ .Enable             (BarrelShiftEn),
  .ShiftEn            (ShiftEn),
  .NumShift           (NumShift),
  .RdReq              (RdReq),
@@ -82,7 +83,8 @@ CTRLFSM uCTRLFSM (
   .NumShift_ZeroDecode      (NumShift_ZeroDecode),
   .ShiftEn_ZeroDecode       (ShiftEn_ZeroDecode),
   .ZeroDecodeDone           (ZeroDecodeDone),
-  .BlockDone                (BlockDone)
+  .BlockDone                (BlockDone),
+  .BarrelShiftEn            (BarrelShiftEn)
 );
 ////////////////////////////////////////////////////////////////////////////////
 // Level decode instance.
@@ -105,6 +107,7 @@ ZeroDecode uZeroDecode (
   .Clk             (Clk),
   .nReset          (nReset),
   .Enable          (ZeroDecodeEnable),
+  .nC              (nC),                                   
   .BitstreamShifted(BitstreamShifted),
   .TotalCoeff      (TotalCoeff),
   .NumShift        (NumShift_ZeroDecode),
