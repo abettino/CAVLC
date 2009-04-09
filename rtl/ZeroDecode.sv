@@ -54,7 +54,7 @@ end
 
 TotalZeroTable_1 TotalZeroTable  (
   .Bits (BitstreamShifted[15:7]),
-  .TotalCoeff(TotalCoeff),
+  .TotalCoeff(TotalCoeff[3:0]),
   .TotalZeroes(TotalZeroes),
   .NumShift (NumShiftTotalZero)
 );
@@ -69,7 +69,7 @@ RunBeforeTable uRunBeforeTable (
 
 TotalZeroTableDCChroma uTotalZeroTableDCChroma (
                         .Bits(BitstreamShifted[15:7]),
-                        .TotalCoeff(TotalCoeff),
+                        .TotalCoeff(TotalCoeff[3:0]),
                         .TotalZeroes(TotalZeroesDCChroma),
                         .NumShift (NumShiftDCChroma)
                         );

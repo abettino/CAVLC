@@ -31,6 +31,7 @@ logic [5:0]                               BitPtrComb; // Bit pointer comb.
 logic [47:0]                              CurrentData;
 logic                                     ShiftCond;
 logic                                     BitPtrOverRun;
+logic                                     Empty;
 ////////////////////////////////////////////////////////////////////////////////
 // Barrel shift enable condition. Once enabled and the FIFO
 // has sufficient data, we will assume the EMIF will be able to 
@@ -38,7 +39,8 @@ logic                                     BitPtrOverRun;
 always_ff @(posedge Clk or negedge nReset) 
   if      (!nReset)             BarrelShiftEn <= '0;
   else if (!Enable)             BarrelShiftEn <= '0;
-  else if (Enable & AlmostFull) BarrelShiftEn <= '1;
+//  else if (Enable & AlmostFull) BarrelShiftEn <= '1;
+  else if (Enable & !Empty) BarrelShiftEn <= '1;
 // control the starup of the barrel shifter.
 always_ff @(posedge Clk or negedge nReset)
   if (!nReset) begin 
@@ -70,7 +72,7 @@ FIFO uFIFO(
   .DataOut   (DataOutFIFO),
   .Full      (),
   .AlmostFull(AlmostFull),
-  .Empty     (),
+  .Empty     (Empty),
   .Overflow  (),
   .Underflow ()
 );

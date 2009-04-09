@@ -3,6 +3,8 @@
 //  Desc : Coeff token decoder.
 //   
 ////////////////////////////////////////////////////////////////////////////////
+`define NEW_LUTS 
+
 module CoeffTokenDecode (
   input  logic        Clk,             // clock.
   input  logic        nReset,          // reset.
@@ -89,13 +91,24 @@ always_comb begin
   endcase
 end
 
+
 // ROM for 0 <= nC < 2
+`ifdef NEW_LUTS
+CoeffTokenLUT02 uCoeffTokenROM02 (
+  .Bits     (BitstreamShifted), 
+  .TotalCoeff  (TotalCoeff02), 
+  .TrailingOnes(TrailingOnes02),
+  .NumShift    (NumShift02)
+                                  );
+`else
 CoeffTokenROM02 uCoeffTokenROM02 (
   .Address     (BitstreamShifted), 
   .TotalCoeff  (TotalCoeff02), 
   .TrailingOnes(TrailingOnes02),
   .NumShift    (NumShift02)
                                   );
+`endif
+
 // ROM for 4 <= nC < 8
 CoeffTokenROM48 uCoeffTokenROM48 (
   .Address     (BitstreamShifted), 

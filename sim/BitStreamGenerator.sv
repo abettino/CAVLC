@@ -232,7 +232,7 @@ virtual task RunLevelCheck();
 //  join_none
 endtask
 
-virtual task Run();
+virtual task Run(output int block_cnt_out);
 int  count;
 int  block_cnt;
 
@@ -243,8 +243,9 @@ int  block_cnt;
   CAVLCIntfc.nC <= nCArray[0];
   CAVLCIntfc.Bitstream <= BitStreamMem[0];
   
-  repeat (10) @(CAVLCIntfc.cb);
-  
+//  repeat (10) @(CAVLCIntfc.cb);
+  repeat (1) @(CAVLCIntfc.cb);
+
   CAVLCIntfc.Enable <= '1;
   $display("Run top!\n");
 
@@ -258,13 +259,20 @@ int  block_cnt;
       if (CAVLCIntfc.RdReq) begin
         count++;
       end
+
+//      if (NumBlocks == 1) begin
+//        repeat (3) @(CAVLCIntfc.cb);
+//        CAVLCIntfc.Enable <= '0;        
+//      end
+
       if (CAVLCIntfc.BlockDone) begin
         block_cnt++;
         CAVLCIntfc.nC <= nCArray[block_cnt];
         $display("block_cnt: %d NumBlocks: %d nC: %d",block_cnt,NumBlocks,nCArray[block_cnt]);
-        if (block_cnt == NumBlocks-1) begin
-          repeat (3) @(CAVLCIntfc.cb);
+//        if (block_cnt == NumBlocks-1 || block_cnt==NumBlocks) begin
+        if (block_cnt == NumBlocks) begin
           CAVLCIntfc.Enable <= '0;        
+          if (block_cnt==1) repeat (3) @(CAVLCIntfc.cb);
         end
       end
       if (block_cnt == NumBlocks) begin 
@@ -275,22 +283,27 @@ int  block_cnt;
     end
 //  join_none
 
-
+  block_cnt_out = block_cnt;
+  
   
 endtask
 
-virtual function LoadBitstream(input string filename);
+virtual function int LoadBitstream(input string filename);
 int     i;
 logic [16*30-1:0] LongStream;
 logic [15:0] CurrentWord;
 logic [15:0] NextWord;
-
+int          res;
 logic [15:0] Mask;
   
   // clear mem.
   for (i=0;i<`BIT_STREAM_MEM_SIZE;i++) BitStreamMem[i] = 32'bx;
 
   $readmemh(filename,BitStreamMem);
+  
+  if (BitStreamMem[0] === 'x) begin
+    return 0; //bad load.
+  end
 
   // find the size. isn't there a better way for this? readmem should return size or something
   for (i=0;i<`BIT_STREAM_MEM_SIZE;i++) if (BitStreamMem[i] === 32'bx)  break;  
@@ -336,6 +349,8 @@ logic [15:0] Mask;
     LongStream = LongStream << 16;
   end
 */
+  return 1; //good load
+
 endfunction
 
 virtual function LoadLevels(input string filename);

@@ -76,7 +76,7 @@ always_ff @(posedge Clk or negedge nReset)
     if (Enable & TrailingOnesLeft==0) begin
       if (!StallPipeLine) begin
         case (SuffixLength)
-          0 : if (OnePos > 5 || (OnePos > 3 && TrailingOnes < 3)) SuffixLength <= 3'd2;
+          0 : if ((OnePos > 5 || (OnePos > 3 && TrailingOnes < 3)) | Stalled) SuffixLength <= 3'd2;
               else SuffixLength <= 3'd1;
           1 : if (Level1Thresh) SuffixLength <= 3'd2;
           2 : if (Level2Thresh)  SuffixLength <= 3'd3;
@@ -119,7 +119,7 @@ always_comb begin
     end
   endcase
  */
-   if (OnePos == 'hE || OnePos == 'hF) StallPipeLine = '1;
+   if (!Stalled && (OnePos == 'hE || OnePos == 'hF) && TrailingOnesLeft==0) StallPipeLine = '1;
    else StallPipeLine = '0;
 end
 // Calculate the code number based on current suffix length
@@ -157,8 +157,14 @@ always_ff @(posedge Clk or negedge nReset)
       else begin
         case (SuffixLength)
           0 : begin
-            if (OnePos <= 13) CodeNum <= OnePos;
-            else if (OnePos > 13 && OnePos <= 29) CodeNum <= 14+BitstreamShifted[15:13];
+            if (!Stalled) begin
+              if (OnePos <= 13) CodeNum <= OnePos;
+              else if (OnePos > 13 && OnePos <= 29) CodeNum <= 14+BitstreamShifted[15:13];
+            end
+            else begin
+              if (PrevOnePos=='hE) CodeNum <= 'd14+BitstreamShifted[15:12];
+              else if (PrevOnePos=='hF) CodeNum <= 'd30+BitstreamShifted[15:4];
+            end
             LPUTrig <= !StallPipeLine;
           end
           1 : begin
@@ -210,7 +216,8 @@ always_comb begin
       ShiftEn = '1;
     end
     4'b1001 : begin // pipeline stalled.
-      if (PrevOnePos == 'hE) NumShift=SuffixLength;
+      if (PrevOnePos == 'hE && SuffixLength!=0) NumShift=SuffixLength;
+      else if (PrevOnePos == 'hE) NumShift = 'd4;
       else NumShift = 'd12;
       ShiftEn = '1;
     end

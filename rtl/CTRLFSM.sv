@@ -24,6 +24,9 @@ module CTRLFSM (
    output logic        BlockDone,                // Output status to ext. control.
    output logic        BarrelShiftEn
 );
+// 
+logic                  DisableReg;
+
 ////////////////////////////////////////////////////////////////////////////////
 // State machine.
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +38,7 @@ enum logic [3:0] {
             COEFF_TOKEN_1,
             LEVEL_DECODE,
             ZERO_DECODE,  
+            CHECK_ENABLE,
             XX
             } CurrentState, NextState;
 // Sync. logic.
@@ -49,13 +53,18 @@ always_comb begin
                     else                             NextState = WAIT_ENABLE;
     WAIT_B_SHIFTER : if (BarrelShifterReady)         NextState = COEFF_TOKEN_0;
                      else                            NextState = WAIT_B_SHIFTER;
-    COEFF_TOKEN_0 :                                  NextState = COEFF_TOKEN_1;
+    COEFF_TOKEN_0 ://  if (Enable)                     NextState = COEFF_TOKEN_1;
+//                     else                            NextState = WAIT_ENABLE;
+      NextState = COEFF_TOKEN_1;
     COEFF_TOKEN_1 :                                  NextState = LEVEL_DECODE;
     LEVEL_DECODE  : if (LevelDecodeDone)             NextState = ZERO_DECODE;
                     else                             NextState = LEVEL_DECODE;
     ZERO_DECODE   : if (!ZeroDecodeDone)             NextState = ZERO_DECODE;
-                    else if (!Enable)                NextState = WAIT_ENABLE;
-                    else                             NextState = COEFF_TOKEN_0;
+//                    else if (!Enable)                NextState = WAIT_ENABLE;
+//                    else                             NextState = COEFF_TOKEN_0;
+    else NextState = WAIT_ENABLE;
+    CHECK_ENABLE  : if (!Enable) NextState = WAIT_ENABLE;
+    else NextState = COEFF_TOKEN_0;
     XX            :                                  NextState = WAIT_ENABLE;
     default       :                                  NextState = WAIT_ENABLE;
   endcase
@@ -100,10 +109,17 @@ always_ff @(posedge Clk or negedge nReset)
     CoeffTokenDecodeEnable <= (CurrentState==COEFF_TOKEN_0);
     LevelDecodeEnable      <= (CurrentState==LEVEL_DECODE);
     ZeroDecodeEnable       <= (CurrentState==ZERO_DECODE);
-    BlockDone              <= ((CurrentState==ZERO_DECODE) && ZeroDecodeDone);
-    if (CurrentState == WAIT_ENABLE) BarrelShiftEn <= '0;
-    else BarrelShiftEn <= '1;
-    
+//    if (CurrentState == WAIT_ENABLE) BarrelShiftEn <= '0;
+//    else BarrelShiftEn <= '1;
+    BarrelShiftEn <= !((CurrentState == WAIT_ENABLE) & !Enable);
+    BlockDone              <= ((CurrentState==ZERO_DECODE) && ZeroDecodeDone);  
   end
+
 ////////////////////////////////////////////////////////////////////////////////
+// disabl reg
+always_ff @(posedge Clk or negedge nReset)
+  if (!nReset) DisableReg <= '0;
+  else if (CurrentState == WAIT_ENABLE) DisableReg <= '0;
+//  else if (!Enable) DisableReg <= '1;
+
 endmodule

@@ -12,6 +12,7 @@ logic        Enable;
 logic [4:0]  nC;
 logic [4:0]  TotalCoeffOut;
 
+
 clocking cb @(posedge Clk);
 input        LevelOut,RdReq,WrReq,BlockDone,TotalCoeffOut;
 output       nReset,Bitstream, Enable,nC;
@@ -31,7 +32,7 @@ module tbCAVLC;
 bit        Clk;
 always #(`CLK_PERIOD/2) Clk = ~Clk;
 bit [15:0] DataReg;
-
+bit [9:0]  WDCnt;
 // CAVLC Interface.
 CAVLCIntfc CAVLCIntfc(Clk);
 
@@ -51,7 +52,18 @@ CAVLC uCAVLC (
 
 // launch the test
 //basic_test test(CAVLCIntfc);
-test_100 test(CAVLCIntfc);
+//test_100 test(CAVLCIntfc);
+test_1000 test(CAVLCIntfc);
+
+always @(posedge Clk) begin
+  if (CAVLCIntfc.BlockDone) WDCnt <= 0;
+  else WDCnt <= WDCnt + 1;
+  if (WDCnt == 1000) begin
+    $display("ERROR: Watch dog expired");
+    $stop;
+  end    
+
+end
 
 endmodule
 
@@ -60,6 +72,7 @@ program test_100(CAVLCIntfc CAVLCIntfc);
 BitStreamGenerator b1;
 nCGenerator n1;
 int        MBCnt;
+int        block_cnt;
 
 string     bitstream_filename;
 string     level_filename;
@@ -83,7 +96,7 @@ initial begin
     $display("*************");
     b1.LoadBitstream(bitstream_filename);
     b1.LoadLevels(level_filename);
-    b1.Run();
+    b1.Run(block_cnt);
     b1.ResetValues();
     wait(b1.BitStreamDone==1);
   end
@@ -92,10 +105,87 @@ end
 
 endprogram
 
+program test_1000(CAVLCIntfc CAVLCIntfc);
+
+BitStreamGenerator b1;
+nCGenerator n1;
+int        MBCnt;
+
+string     bitstream_filename;
+string     level_filename;
+int        res;
+int        TotalMBCnt;
+int        num_clocks;
+int        block_cnt;
+int        block_array[50];
+string     base;
+
+initial begin
+  b1 = new(CAVLCIntfc);
+  b1.Init();
+  b1.OutOfReset();
+  TotalMBCnt = 0;
+  base = `BASE;
+  
+  for (int i=0;i<50;i++) block_array[i]=0;
+  
+  for(MBCnt=0;MBCnt<1000;MBCnt++) begin
+    if (MBCnt < 10) begin 
+      bitstream_filename = $psprintf("%s%01d",base,MBCnt);
+      level_filename = $psprintf("%slevel_%01d",base,MBCnt);
+    end
+    else if (MBCnt < 100) begin
+      bitstream_filename = $psprintf("%s%02d",base,MBCnt);
+      level_filename = $psprintf("%slevel_%02d",base,MBCnt);
+    end
+    else begin
+      bitstream_filename = $psprintf("%s%03d",base,MBCnt);
+      level_filename = $psprintf("%slevel_%03d",base,MBCnt);
+    end
+
+    $display("*************");
+    $display("MB %03d",MBCnt);
+    $display("*************");
+res =    b1.LoadBitstream(bitstream_filename);
+
+    // skip if there is a bad load.
+    if (res == 0) begin
+      $display("Skipping number %d, no file",MBCnt);
+      continue;
+    end
+    else begin
+      TotalMBCnt++;
+    end
+
+    b1.LoadLevels(level_filename);
+    b1.Run(block_cnt);
+    block_array[block_cnt]++;
+    b1.ResetValues();
+    wait(b1.BitStreamDone==1);
+  end
+                                 
+  $display("Simulation complete: %d MBs in %d ps",TotalMBCnt,$time);
+  num_clocks = $time/10;
+  $display("Number of clocks: %d\nNumber clocks/MB: %d",num_clocks,num_clocks/TotalMBCnt);
+  $display("Required frequency (clocks/second) for 1920x1088 video at 30 fps: %d Mhz", (1920*1088*30/256*(num_clocks/TotalMBCnt))/1000000);
+
+  $display("Number of 4x4/2x2 per MB coverage");
+  for(int i=0;i<50;i++) begin
+    if (block_array[i] > 0) $display("%d: %d",i,block_array[i]);
+  end
+
+  $stop;
+  
+
+end
+
+endprogram
+
 program basic_test(CAVLCIntfc CAVLCIntfc);
 
 BitStreamGenerator b1;
 nCGenerator n1;
+int block_cnt;
 
 initial begin
   b1 = new(CAVLCIntfc);
@@ -110,7 +200,7 @@ initial begin
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_0");
 //  b1.DisplayLevels(10);
 //  b1.DisplaynC(10);
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -119,7 +209,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_1");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_1");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -129,7 +219,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_2");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_2");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -139,7 +229,7 @@ initial begin
  $display("*************");
  b1.LoadBitstream("../stim/test_data_0/test_data_0_3");
  b1.LoadLevels("../stim/test_data_0/test_data_0_level_3");
- b1.Run();
+ b1.Run(block_cnt);
  b1.ResetValues();
  wait(b1.BitStreamDone==1);
 
@@ -148,7 +238,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_4");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_4");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -157,7 +247,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_5");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_5");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -166,7 +256,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_6");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_6");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -176,7 +266,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_7");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_7");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -186,7 +276,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_8");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_8");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 
@@ -195,7 +285,7 @@ initial begin
   $display("*************");
   b1.LoadBitstream("../stim/test_data_0/test_data_0_9");
   b1.LoadLevels("../stim/test_data_0/test_data_0_level_9");
-  b1.Run();
+  b1.Run(block_cnt);
   b1.ResetValues();
   wait(b1.BitStreamDone==1);
 

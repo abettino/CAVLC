@@ -1,13 +1,13 @@
-set compile_roms false
+set compile_roms true
 
 
 if ([string equal $compile_roms "true"]) {
-vlog -work work  ../rtl/CoeffTokenROM02.v \
-../rtl/CoeffTokenROM48.v \
-../rtl/CoeffTokenROM8.v \
-../rtl/CoeffTokenROM24.v \
-../rtl/CoeffTokenROMNeg1.v \
-../rtl/CoeffTokenROMNeg2.v 
+vlog -work work  ../rtl/CoeffTokenROM02Short.v \
+../rtl/CoeffTokenROM48Short.v \
+../rtl/CoeffTokenROM8Short.v \
+../rtl/CoeffTokenROM24Short.v \
+../rtl/CoeffTokenROMNeg1Short.v \
+../rtl/CoeffTokenROMNeg2Short.v 
 }
 
 vlog -work work  ../rtl/CoeffTokenDecode.sv \

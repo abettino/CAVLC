@@ -16,7 +16,9 @@ int main () {
   int max_value;
   int i;
   int j;
-  if(!(file = fopen("coeff_token_neg_2_nospace.dat","r"))) {
+
+  //  if(!(file = fopen("coeff_token_neg_1_nospace.dat","r"))) {
+    if(!(file = fopen("coeff_token_0_2_nospace.dat","r"))) {
     printf("error file\n");
     return -1;
   }
@@ -46,15 +48,44 @@ int main () {
   }
   
   j=0;
-
+#if 0
   printf("module ROM (input [15:0] Address, output reg [4:0] TotalCoeff, output reg [1:0] TrailingOnes, output reg [4:0] NumShift);\n");
   printf("always @* begin\n");
-  printf("case (Address)\n");
+#endif
+  //  printf("case (Address)\n");
   while (!feof(file)) {
     if (fscanf(file,"%s",bitstring)>0) {
       length = strlen(bitstring);
       max_value = 1 << (16-length); // 2^(16-length)
-      if (length != 16) {
+
+      if (length==6 || length==5)            printf("%d\t%s\n",length,bitstring);
+      if (length==1) {
+	//	printf("4'b%s : begin\n",bitstring);
+	//	printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);
+	//	printf("  TrailingOnes = 2'd%d;\n",t1_array[j]);
+	//	printf("  NumShift = 5'd%d;\nend\n",length);
+
+      }
+
+      for(i=0;i<length;i++) {
+	if (bitstring[i] == '1') {
+	  //
+	}
+      }
+
+#if 0
+      if (j==0) {
+	printf("if (Address[15:%d]==%d'b%s) begin\n", 16-length,length,bitstring);
+      } else {
+	printf("else if (Address[15:%d]==%d'b%s) begin\n", 16-length,length,bitstring);
+      }
+
+      printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);
+      printf("  TrailingOnes = 2'd%d;\n",t1_array[j]);
+      printf("  NumShift = 5'd%d;\n",length);
+      printf("end\n");
+#endif
+/*      if (length != 16) {
 	for(i=0;i<max_value;i++) {
 	  printf("16'b");
 	  printf("%s",bitstring);
@@ -75,17 +106,20 @@ int main () {
 	printf("  NumShift = 5'd%d;\n",length);
 	printf("end\n");
       }
-
+*/
       j++;
 
     }
   }
 
-  printf("default : begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\n  NumShift=5'd0;\n\nend\n");
+  //  printf("default : begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\n  NumShift=5'd0;\n\nend\n");
+#if 0
+   printf("else begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\n  NumShift=5'd0;\n\nend\n");
 
-
-  printf("endcase\nend\nendmodule\n");
+ //  printf("endcase\nend\nendmodule\n");
+  printf("end\nendmodule\n");
   return 0;
+#endif
 }
 	  
 // print a binary number up to 16 bits.

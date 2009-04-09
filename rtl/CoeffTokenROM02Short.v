@@ -311,9 +311,12 @@ else if (Address[15:0]==16'b0000000000001000) begin
   NumShift = 5'd16;
 end
 else begin
-  TotalCoeff=5'd31;
-  TrailingOnes=2'd0;
-  NumShift=5'd0;
+//  TotalCoeff=5'd31;
+//  TrailingOnes=2'd0;
+//  NumShift=5'd0;
+  TotalCoeff=5'bx;
+  TrailingOnes=2'bx;
+  NumShift=5'bx;
 
 end
 end
