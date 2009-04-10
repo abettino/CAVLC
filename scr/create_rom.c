@@ -9,6 +9,7 @@ int main () {
   FILE* total_coeffs;
   FILE* t1s;
   char bitstring[16];
+  char substring[16];
   int total_coeffs_array[100];
   int t1_array[100];
   int tmp;
@@ -16,7 +17,8 @@ int main () {
   int max_value;
   int i;
   int j;
-
+  int num_1s;
+  int num_lead_0s;
   //  if(!(file = fopen("coeff_token_neg_1_nospace.dat","r"))) {
     if(!(file = fopen("coeff_token_0_2_nospace.dat","r"))) {
     printf("error file\n");
@@ -58,7 +60,21 @@ int main () {
       length = strlen(bitstring);
       max_value = 1 << (16-length); // 2^(16-length)
 
-      if (length==7)            printf("%d\t%s\n",length,bitstring);
+      //      if (length==7)            printf("%d\t%s\n",length,bitstring);
+      num_1s=0;
+      num_lead_0s=0;
+      substring[0]='\0';
+
+      for(i=0;i<length;i++) if (bitstring[i]=='1') num_1s++;
+      for(i=0;i<length;i++) {
+	if (bitstring[i]=='1') break;
+	else num_lead_0s++;
+      }
+      for(i=num_lead_0s;i<length;i++) substring[i-num_lead_0s]=bitstring[i];
+      substring[length-num_lead_0s] = NULL;
+
+      printf("%02d\t%d\t%d\t%d\t%s\t%s\n",num_lead_0s,length-num_lead_0s,total_coeffs_array[j],t1_array[j],substring,bitstring);
+
       if (length==1) {
 	//	printf("4'b%s : begin\n",bitstring);
 	//	printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);
