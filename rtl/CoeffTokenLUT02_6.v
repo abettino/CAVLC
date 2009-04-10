@@ -18,10 +18,6 @@ always @* begin
       TotalCoeff = 5'd2;
       TrailingOnes = 2'd1;
     end
-    3'b011 : begin
-      TotalCoeff = 5'd4;
-      TrailingOnes = 2'd3;
-    end
     default : begin
       TotalCoeff = 'bx;
       TrailingOnes = 'bx;

@@ -58,7 +58,7 @@ int main () {
       length = strlen(bitstring);
       max_value = 1 << (16-length); // 2^(16-length)
 
-      if (length==6 || length==5)            printf("%d\t%s\n",length,bitstring);
+      if (length==7)            printf("%d\t%s\n",length,bitstring);
       if (length==1) {
 	//	printf("4'b%s : begin\n",bitstring);
 	//	printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);

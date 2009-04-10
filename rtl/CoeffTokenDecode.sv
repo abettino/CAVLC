@@ -3,7 +3,7 @@
 //  Desc : Coeff token decoder.
 //   
 ////////////////////////////////////////////////////////////////////////////////
-//`define NEW_LUTS 
+`define NEW_LUTS 
 
 module CoeffTokenDecode (
   input  logic        Clk,             // clock.

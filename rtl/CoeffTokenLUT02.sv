@@ -24,6 +24,9 @@ logic [1:0]                             TrailingOnes16,TrailingOnes15,TrailingOn
                                         TrailingOnes11,TrailingOnes10,TrailingOnes9,
                                         TrailingOnes8,TrailingOnes7,TrailingOnes6,TrailingOnes321;
 
+logic [3:0]                             Sum;
+
+
 assign LeadingZ16 = ~|Bits[15:4] & |Bits[3:2];
 assign LeadingZ15 = ~|Bits[15:5];
 assign LeadingZ14 = ~|Bits[15:6];
@@ -32,10 +35,75 @@ assign LeadingZ11 = ~|Bits[15:8];
 assign LeadingZ10 = ~|Bits[15:9];
 assign LeadingZ09 = ~|Bits[15:10];
 assign LeadingZ08 = ~|Bits[15:11];
-assign LeadingZ07 = ~|Bits[15:12] & !Bits[10];
+//assign LeadingZ07 = ~|Bits[15:12] & !Bits[10] & Bits[11];
+assign LeadingZ07 = ~|Bits[15:12];
 assign LeadingZ06 = ~|Bits[15:13];
 
+assign Sum = LeadingZ16+LeadingZ15+LeadingZ14+LeadingZ13+LeadingZ11+LeadingZ10+LeadingZ09
+             +LeadingZ08+LeadingZ07+LeadingZ06;
 
+
+always_comb begin
+  case (Sum)
+    4'hA : begin
+      TotalCoeff = TotalCoeff16;
+      TrailingOnes = TrailingOnes16;
+      NumShift = 5'd16;
+    end
+    4'h9 : begin
+      TotalCoeff = TotalCoeff15;
+      TrailingOnes = TrailingOnes15;
+      NumShift = 5'd15;
+    end
+    4'h8 : begin
+      TotalCoeff = TotalCoeff14;
+      TrailingOnes = TrailingOnes14;
+      NumShift = 5'd14;
+    end
+    4'h7 : begin
+      TotalCoeff = TotalCoeff13;
+      TrailingOnes = TrailingOnes13;
+      NumShift = 5'd13;
+    end
+    4'h6 : begin
+      TotalCoeff = TotalCoeff11;
+      TrailingOnes = TrailingOnes11;
+      NumShift = 5'd11;
+    end
+    4'h5 : begin
+      TotalCoeff = TotalCoeff10;
+      TrailingOnes = TrailingOnes10;
+      NumShift = 5'd10;
+    end
+    4'h4 : begin
+      TotalCoeff = TotalCoeff9;
+      TrailingOnes = TrailingOnes9;
+      NumShift = 5'd9;
+    end
+    4'h3 : begin
+      TotalCoeff = TotalCoeff8;
+      TrailingOnes = TrailingOnes8;
+      NumShift = 5'd8;
+    end
+    4'h2 : begin
+      TotalCoeff = TotalCoeff7;
+      TrailingOnes = TrailingOnes7;
+      NumShift = NumShift7;
+    end
+    4'h1 : begin
+      TotalCoeff = TotalCoeff6;
+      TrailingOnes = TrailingOnes6;
+      NumShift = NumShift6;
+    end
+    default : begin
+      TotalCoeff = TotalCoeff321;
+      TrailingOnes = TrailingOnes321;
+      NumShift = NumShift321;
+    end
+  endcase
+end
+
+/*
 always_comb begin
   if (LeadingZ16) begin
     TotalCoeff = TotalCoeff16;
@@ -93,7 +161,7 @@ always_comb begin
     NumShift = NumShift321;
   end
 end
-
+*/
 
 CoeffTokenLUT02_16 uCoeffTokenLUT02_16 (
                            .Bits(Bits[3:0]),
@@ -151,7 +219,8 @@ CoeffTokenLUT02_8 uCoeffTokenLUT02_8 (
 CoeffTokenLUT02_7 uCoeffTokenLUT02_7 (
                            .Bits(Bits[11:9]),
                            .TotalCoeff(TotalCoeff7), 
-                           .TrailingOnes(TrailingOnes7) 
+                           .TrailingOnes(TrailingOnes7),
+                           .NumShift(NumShift7)                               
                            );
 
 // actually 5 and 6
