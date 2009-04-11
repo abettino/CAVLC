@@ -79,6 +79,42 @@ end
 endmodule
 
 
+
+
+module CoeffTokenLUT02_5678 (
+                           input [4:0] Bits,
+                           input [3:0] LeadingZeroNum,  
+                           output reg [4:0] TotalCoeff, 
+                           output reg [1:0] TrailingOnes 
+                           );
+
+reg [1:0]                                  BitSel;
+
+always @* begin
+  case(LeadingZeroNum)
+    5 : BitSel = Bits[4:3];
+    6 : BitSel = Bits[3:2];
+    7 : BitSel = Bits[2:1];
+    8 : BitSel = Bits[1:0];
+    default : BitSel = 'bx;
+    
+  endcase
+end
+
+always @* begin
+  case (BitSel)
+    2'b11    : TotalCoeff = (LeadingZeroNum-3);
+    2'b10    : TotalCoeff = (LeadingZeroNum-2);
+    2'b01    : TotalCoeff = (LeadingZeroNum-1);
+    2'b00    : TotalCoeff = (LeadingZeroNum+1);
+  endcase
+
+  TrailingOnes = ~BitSel[1:0];
+  
+end
+
+endmodule
+
 module CoeffTokenLUT02_05 (
                            input [1:0] Bits,
                            output reg [4:0] TotalCoeff, 

@@ -19,6 +19,7 @@ logic [1:0]                             TrailingOnes00,TrailingOnes01,TrailingOn
 
 logic [14:0]                            LeadingZeros;
 
+logic [3:0]                             LeadingZeroNum;
 
 always_comb begin 
   LeadingZeros[14] = ~|Bits[15:2];
@@ -45,84 +46,100 @@ always_comb begin
     NumShift = 15;
     TrailingOnes = TrailingOnes14;
     TotalCoeff = TotalCoeff14;
+    LeadingZeroNum = 14;
   end
   else if (LeadingZeros[13] | LeadingZeros[12]) begin
     NumShift = 16;
     if (LeadingZeros[13]) begin 
       TrailingOnes = TrailingOnes13;
       TotalCoeff = TotalCoeff13;
+    LeadingZeroNum = 13;
     end
     else begin
       TrailingOnes = TrailingOnes12;
       TotalCoeff = TotalCoeff12;
+    LeadingZeroNum = 12;
     end
   end
   else if (LeadingZeros[11]) begin
     NumShift = 15;
     TrailingOnes = TrailingOnes11;
     TotalCoeff = TotalCoeff11;
+    LeadingZeroNum = 11;
   end
   else if (LeadingZeros[10]) begin
     NumShift = 14;
     TrailingOnes = TrailingOnes10;
     TotalCoeff = TotalCoeff10;
+    LeadingZeroNum = 10;
   end
   else if (LeadingZeros[9]) begin
     NumShift = 13;
     TrailingOnes = TrailingOnes09;
     TotalCoeff = TotalCoeff09;
+    LeadingZeroNum = 9;
   end
   else if (LeadingZeros[8]) begin
     NumShift = 11;
     TrailingOnes = TrailingOnes08;
     TotalCoeff = TotalCoeff08;
+    LeadingZeroNum = 8;
   end
   else if (LeadingZeros[7]) begin
     NumShift = 10;
-    TrailingOnes = TrailingOnes07;
-    TotalCoeff = TotalCoeff07;
+    TrailingOnes = TrailingOnes08;
+    TotalCoeff = TotalCoeff08;
+    LeadingZeroNum = 7;
   end
   else if (LeadingZeros[6]) begin
     NumShift = 9;
-    TrailingOnes = TrailingOnes06;
-    TotalCoeff = TotalCoeff06;
+    TrailingOnes = TrailingOnes08;
+    TotalCoeff = TotalCoeff08;
+    LeadingZeroNum = 6;
   end
   else if (LeadingZeros[5]) begin
     NumShift = 8;
-    TrailingOnes = TrailingOnes05;
-    TotalCoeff = TotalCoeff05;  // 
+    TrailingOnes = TrailingOnes08;
+    TotalCoeff = TotalCoeff08;  // 
+    LeadingZeroNum = 5;
   end
   else if (LeadingZeros[4]) begin
     if (Bits[10]) NumShift = 6;
     else NumShift = 7;
     TrailingOnes = TrailingOnes04;
     TotalCoeff = TotalCoeff04;
+    LeadingZeroNum = 4;
   end
   else if (LeadingZeros[3]) begin
     if (Bits[11]) NumShift = 5;
     else NumShift = 6;
     TrailingOnes = TrailingOnes03;
     TotalCoeff = TotalCoeff03;
+    LeadingZeroNum = 3;
   end
   else if (LeadingZeros[2]) begin
     NumShift = 3;
     TrailingOnes = TrailingOnes02;
     TotalCoeff = TotalCoeff02;
+    LeadingZeroNum = 2;
   end
   else if (LeadingZeros[1]) begin
     NumShift = 2;
     TrailingOnes = TrailingOnes01;
     TotalCoeff = TotalCoeff01;
+    LeadingZeroNum = 1;
   end
   else if (LeadingZeros[0]) begin
     NumShift = 1;
     TrailingOnes = TrailingOnes00;
     TotalCoeff = TotalCoeff00;
+    LeadingZeroNum = 0;
   end
   else begin
     NumShift = 1;
     TrailingOnes = TrailingOnes00;
     TotalCoeff = TotalCoeff00;
+    LeadingZeroNum = 0;
   end
 end
 
@@ -166,6 +183,15 @@ CoeffTokenLUT02_09 uCoeffTokenLUT02_09 (
                            );
 
 
+
+CoeffTokenLUT02_5678 uCoeffTokenLUT02_5678 (
+                           .Bits(Bits[9:5]),
+                           .LeadingZeroNum(LeadingZeroNum),
+                           .TotalCoeff(TotalCoeff08), 
+                           .TrailingOnes(TrailingOnes08) 
+                           );
+
+/*
 CoeffTokenLUT02_08 uCoeffTokenLUT02_08 (
                            .Bits(Bits[6:5]),
                            .TotalCoeff(TotalCoeff08), 
@@ -193,7 +219,7 @@ CoeffTokenLUT02_05 uCoeffTokenLUT02_05 (
                            .TrailingOnes(TrailingOnes05) 
                            );
 
-
+*/
 CoeffTokenLUT02_04 uCoeffTokenLUT02_04 (
                            .Bits(Bits[10:9]),
                            .TotalCoeff(TotalCoeff04), 
