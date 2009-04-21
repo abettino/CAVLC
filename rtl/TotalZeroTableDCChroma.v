@@ -1,4 +1,4 @@
-module TotalZeroTableDCChroma (
+ module TotalZeroTableDCChroma (
                                input [8:0] Bits,
                                input [3:0] TotalCoeff,
                                output reg [3:0] TotalZeroes,

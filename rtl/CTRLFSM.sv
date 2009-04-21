@@ -16,6 +16,7 @@ module CTRLFSM (
    input  logic        ShiftEn_ZeroDecode,       // ShiftEn from Zero decode. 
    input  logic        LevelDecodeDone,          // Indicates LevelDecode complete.
    input  logic        ZeroDecodeDone,           // Inidcates ZeroDecode complete.
+   input  logic        CoeffTokenDecodeDone,     // CoeffToken Decode complete.   
    output logic        ShiftEn,                  // Control to Barrel Shifter
    output logic  [4:0] NumShift,                 // NumShift to barrel shifter.
    output logic        CoeffTokenDecodeEnable,   // Control to CoeffTokenDecode.
@@ -56,7 +57,8 @@ always_comb begin
     COEFF_TOKEN_0 ://  if (Enable)                     NextState = COEFF_TOKEN_1;
 //                     else                            NextState = WAIT_ENABLE;
       NextState = COEFF_TOKEN_1;
-    COEFF_TOKEN_1 :                                  NextState = LEVEL_DECODE;
+    COEFF_TOKEN_1 : if (CoeffTokenDecodeDone)        NextState = LEVEL_DECODE;
+                    else NextState = COEFF_TOKEN_1;
     LEVEL_DECODE  : if (LevelDecodeDone)             NextState = ZERO_DECODE;
                     else                             NextState = LEVEL_DECODE;
     ZERO_DECODE   : if (!ZeroDecodeDone)             NextState = ZERO_DECODE;
@@ -77,7 +79,7 @@ end
 always_comb begin
   case (CurrentState)
     COEFF_TOKEN_1 : begin 
-      ShiftEn  = '1;
+      ShiftEn  = CoeffTokenDecodeDone;
       NumShift = NumShift_CoeffTokenDecode;
     end
     LEVEL_DECODE :  begin
@@ -106,7 +108,7 @@ always_ff @(posedge Clk or negedge nReset)
     BarrelShiftEn          <= '0;
   end
   else begin
-    CoeffTokenDecodeEnable <= (CurrentState==COEFF_TOKEN_0);
+    CoeffTokenDecodeEnable <= (CurrentState==COEFF_TOKEN_0) || (CurrentState==COEFF_TOKEN_1);
     LevelDecodeEnable      <= (CurrentState==LEVEL_DECODE);
     ZeroDecodeEnable       <= (CurrentState==ZERO_DECODE);
 //    if (CurrentState == WAIT_ENABLE) BarrelShiftEn <= '0;

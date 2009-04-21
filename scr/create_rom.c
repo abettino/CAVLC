@@ -50,8 +50,8 @@ int main () {
   }
   
   j=0;
-#if 0
-  printf("module ROM (input [15:0] Address, output reg [4:0] TotalCoeff, output reg [1:0] TrailingOnes, output reg [4:0] NumShift);\n");
+#if 1
+  printf("module ROM (input [6:0] Address, output reg [4:0] TotalCoeff, output reg [1:0] TrailingOnes, output reg [4:0] NumShift, output reg Match);\n");
   printf("always @* begin\n");
 #endif
   //  printf("case (Address)\n");
@@ -73,8 +73,23 @@ int main () {
       for(i=num_lead_0s;i<length;i++) substring[i-num_lead_0s]=bitstring[i];
       substring[length-num_lead_0s] = NULL;
 
-      printf("%02d\t%d\t%d\t%d\t%s\t%s\n",num_lead_0s,length-num_lead_0s,total_coeffs_array[j],t1_array[j],substring,bitstring);
+      //      printf("%02d\t%d\t%d\t%d\t%s\t%s\n",num_lead_0s,length-num_lead_0s,total_coeffs_array[j],t1_array[j],substring,bitstring);
 
+      if (num_lead_0s > 11 ) {
+	for(i=12;i<length;i++) substring[i-12]=bitstring[i];
+	substring[length-12] = NULL;
+
+	if (j==0)	printf("if (Address[3:%d]==%d'b%s) begin\n", 4-(length-12),length-12,substring);
+	else	printf("else if (Address[3:%d]==%d'b%s) begin\n", 4-(length-12),length-12,substring);
+
+
+	printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);
+	printf("  TrailingOnes = 2'd%d;\n",t1_array[j]);
+	printf("  NumShift = 5'd%d;\n",length);
+	printf("  Match = 1'b1;\nend\n",length);
+      }
+
+      
       if (length==1) {
 	//	printf("4'b%s : begin\n",bitstring);
 	//	printf("  TotalCoeff = 5'd%d;\n",total_coeffs_array[j]);
@@ -129,8 +144,8 @@ int main () {
   }
 
   //  printf("default : begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\n  NumShift=5'd0;\n\nend\n");
-#if 0
-   printf("else begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\n  NumShift=5'd0;\n\nend\n");
+#if 1
+   printf("else begin\n  TotalCoeff=5'd31;\n  TrailingOnes=2'd0;\n  NumShift=5'd0;\n  Match=1'b0;\nend\n");
 
  //  printf("endcase\nend\nendmodule\n");
   printf("end\nendmodule\n");

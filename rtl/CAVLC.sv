@@ -35,6 +35,7 @@ logic [4:0]                       NumShift_ZeroDecode;
 logic                             ZeroDecodeEnable;
 logic                             ZeroDecodeDone;
 logic                             BarrelShiftEn;
+logic                             CoeffTokenDecodeDone;
 ////////////////////////////////////////////////////////////////////////////////
 // Total coeff output.
 assign TotalCoeffOut = TotalCoeff;
@@ -48,7 +49,8 @@ CoeffTokenDecode uCoeffTokenDecode (
    .BitstreamShifted(BitstreamShifted),
    .TotalCoeff      (TotalCoeff),
    .TrailingOnes    (TrailingOnes),
-   .NumShift        (NumShift_CoeffTokenDecode)                                
+   .NumShift        (NumShift_CoeffTokenDecode),                                
+   .Done            (CoeffTokenDecodeDone)
 );
 ////////////////////////////////////////////////////////////////////////////////
 // Barrel Shifter instance.
@@ -84,7 +86,8 @@ CTRLFSM uCTRLFSM (
   .ShiftEn_ZeroDecode       (ShiftEn_ZeroDecode),
   .ZeroDecodeDone           (ZeroDecodeDone),
   .BlockDone                (BlockDone),
-  .BarrelShiftEn            (BarrelShiftEn)
+  .BarrelShiftEn            (BarrelShiftEn),
+  .CoeffTokenDecodeDone (CoeffTokenDecodeDone)
 );
 ////////////////////////////////////////////////////////////////////////////////
 // Level decode instance.
@@ -115,4 +118,7 @@ ZeroDecode uZeroDecode (
   .Done            (ZeroDecodeDone)
 );
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
 endmodule

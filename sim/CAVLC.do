@@ -23,6 +23,8 @@ vlog -work work  ../rtl/CoeffTokenDecode.sv \
 ../rtl/TotalZeroTable_1.v \
 ../rtl/RunBeforeTable.v \
 ../rtl/TotalZeroTableDCChroma.v \
+../rtl/CoeffTokenLUT02StagesTop.v \
+../rtl/CoeffTokenLUT02Stages.v \
 ../rtl/CAVLC.sv
 
 
@@ -44,6 +46,7 @@ add wave -group {FIFO Memory} -radix 16 {tbCAVLC/uCAVLC/uBarrelShifter/uFIFO/uFI
 add wave -group {FIFO Memory} -radix 16 {tbCAVLC/uCAVLC/uBarrelShifter/uFIFO/uFIFOMemory/Memory[7]}
 add wave -group {BarrelShifter} -radix 16 {tbCAVLC/uCAVLC/uBarrelShifter/*}
 add wave -group {CoeffTokenDecode} -radix 16 {tbCAVLC/uCAVLC/uCoeffTokenDecode/*}
+add wave -group {CoeffTokenDecodeStages} -radix 16 {tbCAVLC/uCAVLC/uCoeffTokenDecode/uCoeffTokenROM02/*}
 add wave -group {LevelDecode} -radix 16 {tbCAVLC/uCAVLC/uLevelDecode/*}
 add wave -group {LevelProcUnit} -radix 16 {tbCAVLC/uCAVLC/uLevelDecode/uLevelProcessingUnit/*}
 add wave -group {CTRL FSM} -radix 16 {tbCAVLC/uCAVLC/uCTRLFSM/*}
